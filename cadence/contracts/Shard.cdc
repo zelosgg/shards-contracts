@@ -92,7 +92,10 @@ pub contract Shard: NonFungibleToken {
 
         // Create a Collection resource and save it to storage
         let collection <- create Collection()
-        self.account.save(<-collection, to: /storage/NFTCollection)
+        self.account.save(<-collection, to: /storage/ShardCollection)
+
+        // Publish a reference to the Collection in storage
+        self.account.link<&{NonFungibleToken.Receiver}>(/public/ShardCollection, target: /storage/ShardCollection)
 
         // Create a public capability for the collection
         self.account.link<&{NonFungibleToken.CollectionPublic}>(

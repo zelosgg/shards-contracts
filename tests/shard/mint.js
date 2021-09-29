@@ -1,52 +1,51 @@
 import {
   sendTransaction,
   getAccountAddress,
-  deployContractByName,
-  getContractAddress
+  getContractAddress,
+  mintFlow
 } from "flow-js-testing";
-import deployNonFungibleToken from './standard'
+import createCollection from "./create-collection";
 
-const mint = async (owner, signer) => {
-  // Make sure the NFT contract is deployed first
-  await deployNonFungibleToken()
-  const NonFungibleToken = await getContractAddress("NonFungibleToken")
+const mint = async (signer) => {
+  // Create a collection for the signer
+  await createCollection(signer)
 
-  // Deploy the Shard contract from the owner
-  const name = "Shard";
-  const addressMap = { NonFungibleToken }
-  const from = await getAccountAddress(owner);
-  const transaction = await deployContractByName({ name, addressMap, to: from })
-  console.log(transaction)
+  // The account holder must have flow before receiving NFTs
+  await mintFlow(await getAccountAddress(signer), "0.1")
+
+  // Get the contract addresses
+  const NonFungibleToken = await getContractAddress("NonFungibleToken");
+  const Shard = await getContractAddress("Shard");
 
   // The Cadence transaction code
-  const mint = `
-      import ${name} from ${from}
-      transaction {
-          let receiverRef: &{Shard.Collection}
-          let minterRef: &Shard.NFTMinter
-
-          prepare(acct: AuthAccount) {
-              self.receiverRef = acct.getCapability<&{Shard.Collection}>(/public/ShardCollection).borrow()
-                  ?? panic("Could not borrow receiver reference")
-              self.minterRef = acct.borrow<&Shard.NFTMinter>(from: /storage/NFTMinter)
-                  ?? panic("could not borrow minter reference")
-          }
-
-          execute {
-              let newShard <- self.minterRef.mintShard()
-              self.receiverRef.deposit(token: <-newShard)
-              log("Sahrd Minted and deposited to Account 2's Collection")
-          }
-      }
+  const code = `
+    import NonFungibleToken from ${NonFungibleToken}
+    import Shard from ${Shard}
+    transaction(recipient: Address) {
+        let minter: &Shard.NFTMinter
+        prepare(signer: AuthAccount) {
+            self.minter = signer.borrow<&Shard.NFTMinter>(from: /storage/NFTMinter)
+                ?? panic("Could not borrow a reference to the NFT minter")
+        }
+        execute {
+            let receiver = getAccount(recipient)
+                .getCapability(/public/NFTCollection)
+                .borrow<&{NonFungibleToken.CollectionPublic}>()
+                ?? panic("Could not get receiver reference to the NFT Collection")
+            self.minter.mintNFT(recipient: receiver)
+        }
+    }
   `;
 
   // Create a new account from the given signer parameter
-  const to = await getAccountAddress(signer);
-  const signers = [to];
+  signer = await getAccountAddress(signer)
+  const args = [signer];
+  const signers = [signer];
 
   // Send the transaction and return the result
   return await sendTransaction({
-    code: mint,
+    code,
+    args,
     signers,
   });
 };
