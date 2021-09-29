@@ -1,0 +1,19 @@
+{
+  "name": "shards-contracts",
+  "version": "1.0.0",
+  "description": "## Contracts",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "hexcowboy",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
+    "@onflow/types": "0.0.5",
+    "babel-jest": "^27.2.3",
+    "flow-js-testing": "^0.1.13",
+    "jest": "^27.2.3"
+  }
+}
