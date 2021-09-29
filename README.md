@@ -2,7 +2,7 @@
 
 ## Contracts
 
-- [`NFT.cdc`](./cadence/contracts/NFT.cdc) - The Shard NFT
+- [`Shard.cdc`](./cadence/contracts/Shard.cdc) - The Shard NFT
 - [`Crystal.cdc`](./cadence/contracts/Crystal.cdc) - The Crystal mechanics
 
 ## Development Testing
