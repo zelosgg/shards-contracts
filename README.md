@@ -2,8 +2,8 @@
 
 ## Contracts
 
-- `Shard.sol`
-- `Crystal.sol`
+- [`Shard.cdc`]('./cadence/contracts/Shard.cdc')
+- [`Crystal.cdc`]('./cadence/contracts/Crystal.cdc')
 
 ## Development Testing
 

@@ -27,11 +27,8 @@ pub contract ExampleNFT {
     // They would use this to only expose the deposit, getIDs,
     // and idExists fields in their Collection
     pub resource interface NFTReceiver {
-
         pub fun deposit(token: @NFT)
-
         pub fun getIDs(): [UInt64]
-
         pub fun idExists(id: UInt64): Bool
     }
 
@@ -132,6 +129,3 @@ pub contract ExampleNFT {
         self.account.save(<-create NFTMinter(), to: /storage/NFTMinter)
 	}
 }
-
-
-
