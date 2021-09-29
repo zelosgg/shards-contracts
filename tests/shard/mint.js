@@ -8,27 +8,27 @@ import {
 const mint = async (owner, signer) => {
   // Deploy the contract from the owner
   const to = await getAccountAddress(owner);
-  const name = "ExampleNFT";
+  const name = "Shard";
   await deployContractByName({ to, name });
 
   const from = await getAccountAddress(signer);
   const code = `
-      import ExampleNFT from ${owner}
+      import ${name} from ${owner}
       transaction {
-          let receiverRef: &{ExampleNFT.NFTReceiver}
-          let minterRef: &ExampleNFT.NFTMinter
+          let receiverRef: &{Shard.ShardReceiver}
+          let minterRef: &Shard.ShardMinter
 
           prepare(acct: AuthAccount) {
-              self.receiverRef = acct.getCapability<&{ExampleNFT.NFTReceiver}>(/public/NFTReceiver).borrow()
+              self.receiverRef = acct.getCapability<&{Shard.ShardReceiver}>(/public/ShardReceiver).borrow()
                   ?? panic("Could not borrow receiver reference")
-              self.minterRef = acct.borrow<&ExampleNFT.NFTMinter>(from: /storage/NFTMinter)
+              self.minterRef = acct.borrow<&Shard.ShardMinter>(from: /storage/ShardMinter)
                   ?? panic("could not borrow minter reference")
           }
 
           execute {
-              let newNFT <- self.minterRef.mintNFT()
-              self.receiverRef.deposit(token: <-newNFT)
-              log("NFT Minted and deposited to Account 2's Collection")
+              let newShard <- self.minterRef.mintShard()
+              self.receiverRef.deposit(token: <-newShard)
+              log("Sahrd Minted and deposited to Account 2's Collection")
           }
       }
   `;
