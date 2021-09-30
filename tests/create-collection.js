@@ -5,7 +5,7 @@ import {
 } from "flow-js-testing";
 
 // Initializes a new storage space for users to receive NFTs
-const createCollection = async (signer) => {
+const createCollection = async (...signers) => {
   // Get the contract addresses
   const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
@@ -29,14 +29,16 @@ const createCollection = async (signer) => {
     }
   `;
 
-  // Create a new account from the given signer parameter
-  const signers = [await getAccountAddress(signer)];
+  for (const signer of signers) {
+    // Send the transaction and return the result
+    var tx = await sendTransaction({
+      code,
+      signers: [await getAccountAddress(signer)],
+    });
+  }
 
-  // Send the transaction and return the result
-  return await sendTransaction({
-    code,
-    signers,
-  });
+  // We need to return something for the unit test, so return the last tx
+  return tx
 };
 
 export default createCollection;

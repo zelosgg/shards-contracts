@@ -6,21 +6,14 @@ import Shard from 0xShard
 
 transaction {
     prepare(acct: AuthAccount) {
-        // Return early if the account already has a collection
-        if acct.borrow<&Shard.Collection>(from: /storage/NFTCollection) != nil {
+        if acct.borrow<&Shard.Collection>(from: /storage/ShardCollection) != nil {
             return
         }
-
-        // Create a new empty collection
         let collection <- Shard.createEmptyCollection()
-
-        // save it to the account
-        acct.save(<-collection, to: /storage/NFTCollection)
-
-        // create a public capability for the collection
+        acct.save(<-collection, to: /storage/ShardCollection)
         acct.link<&{NonFungibleToken.CollectionPublic}>(
-            /public/NFTCollection,
-            target: /storage/NFTCollection
+            /public/ShardCollection,
+            target: /storage/ShardCollection
         )
     }
 }

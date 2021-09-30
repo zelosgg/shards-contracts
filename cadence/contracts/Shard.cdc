@@ -9,6 +9,12 @@ pub contract Shard: NonFungibleToken {
     // Total supply also correlating to the next mint ID
     pub var totalSupply: UInt64
 
+    pub enum Sequence: UInt8 {
+        pub case beginning
+        pub case middle
+        pub case end
+    }
+
     // Events
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
@@ -19,13 +25,25 @@ pub contract Shard: NonFungibleToken {
         pub let id: UInt64
         // Moment ID
         pub let momentID: UInt64
+        // The sequence of the provided moment
+        pub let sequence: Sequence
         // Metadata URI
         pub var metadata: {String: String}
 
-        init(initID: UInt64, momentID: UInt64) {
+        init(
+            initID: UInt64,
+            momentID: UInt64,
+            sequence: Sequence,
+            metadata: {String: String}
+        ) {
+            pre {
+                metadata.length != 0: "New Play metadata cannot be empty"
+            }
+
             self.id = initID
             self.momentID = momentID
-            self.metadata = {}
+            self.sequence = sequence
+            self.metadata = metadata
         }
     }
 
@@ -82,9 +100,19 @@ pub contract Shard: NonFungibleToken {
     // able to mint new NFTs
     pub resource ShardMinter {
         // Mints a new NFT with a new ID
-        pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, momentID: UInt64) {
-            // Creates a new NFT
-            var newNFT <- create NFT(initID: Shard.totalSupply, momentID: momentID)
+        pub fun mintNFT(
+            recipient: &{NonFungibleToken.CollectionPublic},
+            momentID: UInt64,
+            sequence: Sequence,
+            metadata: {String: String}
+        ) {
+            // Creates a new NFT with provided arguments
+            var newNFT <- create NFT(
+                initID: Shard.totalSupply,
+                momentID: momentID,
+                sequence: sequence,
+                metadata: metadata
+            )
 
             // Deposits it in the recipient's account using their reference
             recipient.deposit(token: <-newNFT)

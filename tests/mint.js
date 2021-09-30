@@ -2,14 +2,9 @@ import {
   sendTransaction,
   getAccountAddress,
   getContractAddress,
-  mintFlow,
 } from "flow-js-testing";
-import createCollection from "./create-collection";
 
-const mint = async (signer) => {
-  // Create a collection for the signer
-  await createCollection(signer);
-
+const mint = async (from, to) => {
   // Get the contract addresses
   const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
@@ -18,7 +13,12 @@ const mint = async (signer) => {
   const code = `
     import NonFungibleToken from ${NonFungibleToken}
     import Shard from ${Shard}
-    transaction(recipient: Address, momentID: UInt64) {
+    transaction(
+        recipient: Address,
+        momentID: UInt64,
+        sequence: UInt8,
+        metadataURI: {String: String}
+    ) {
         let minter: &Shard.ShardMinter
         prepare(signer: AuthAccount) {
             self.minter = signer.borrow<&Shard.ShardMinter>(from: /storage/ShardMinter)
@@ -29,16 +29,22 @@ const mint = async (signer) => {
                 .getCapability(/public/ShardCollection)
                 .borrow<&{NonFungibleToken.CollectionPublic}>()
                 ?? panic("Could not get receiver reference to the Shard Collection")
-            self.minter.mintNFT(recipient: receiver, momentID: momentID)
+            self.minter.mintNFT(
+                recipient: receiver,
+                momentID: momentID,
+                sequence: Shard.Sequence(rawValue: sequence)!,
+                metadata: metadataURI
+            )
         }
     }
   `;
 
   // Create a new account from the given signer parameter
-  const signerAddress = await getAccountAddress(signer)
-  const momentID = 33
-  const args = [signerAddress, momentID];
-  const signers = [signerAddress];
+  const momentID = Math.floor(Math.random() * 18446744073709551615)
+  const sequence = Math.floor(Math.random() * 3)
+  const metadataURI = "https://eternal.gg/metadata.json"
+  const args = [await getAccountAddress(to), momentID, sequence, metadataURI];
+  const signers = [await getAccountAddress(from)];
 
   // Send the transaction and return the result
   return await sendTransaction({
