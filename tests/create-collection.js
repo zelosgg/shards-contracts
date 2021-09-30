@@ -4,7 +4,6 @@ import {
   getContractAddress,
 } from "flow-js-testing";
 
-
 // Initializes a new storage space for users to receive NFTs
 const createCollection = async (signer) => {
   // Get the contract addresses

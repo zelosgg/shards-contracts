@@ -6,9 +6,9 @@ import {
   shallRevert,
   getAccountAddress,
 } from "flow-js-testing";
-import mint from "./mint";
-import createCollection from './create-collection'
-import deploy from "./deploy";
+import mint from "../mint";
+import createCollection from "../create-collection";
+import deploy from "../deploy";
 
 // We need to set timeout for a higher number, because some transactions might take up some time
 jest.setTimeout(10000);
@@ -26,18 +26,18 @@ describe("shard", () => {
     return emulator.stop();
   });
 
-  test('initialize storage', async () => {
-    await deploy("operator")
-    await shallPass(createCollection("user"))
-  })
+  test("initialize storage", async () => {
+    await deploy("operator");
+    await shallPass(createCollection("user"));
+  });
 
   test("operator can mint", async () => {
-    await deploy("operator")
+    await deploy("operator");
     await shallPass(mint("operator"));
   });
 
   test("non-operator cannot mint", async () => {
-    await deploy("operator")
-    await shallRevert(mint("non-operator"));;
+    await deploy("operator");
+    await shallRevert(mint("non-operator"));
   });
 });

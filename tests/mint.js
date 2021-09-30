@@ -2,16 +2,16 @@ import {
   sendTransaction,
   getAccountAddress,
   getContractAddress,
-  mintFlow
+  mintFlow,
 } from "flow-js-testing";
 import createCollection from "./create-collection";
 
 const mint = async (signer) => {
   // Create a collection for the signer
-  await createCollection(signer)
+  await createCollection(signer);
 
   // The account holder must have flow before receiving NFTs
-  await mintFlow(await getAccountAddress(signer), "0.1")
+  await mintFlow(await getAccountAddress(signer), "0.1");
 
   // Get the contract addresses
   const NonFungibleToken = await getContractAddress("NonFungibleToken");
@@ -38,7 +38,7 @@ const mint = async (signer) => {
   `;
 
   // Create a new account from the given signer parameter
-  signer = await getAccountAddress(signer)
+  signer = await getAccountAddress(signer);
   const args = [signer];
   const signers = [signer];
 
