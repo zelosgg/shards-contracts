@@ -4,8 +4,10 @@ import {
   emulator,
   shallPass,
   shallRevert,
+  mintFlow,
   getAccountAddress,
 } from "flow-js-testing";
+import fund from '../fund-accounts'
 import mint from "../mint";
 import createCollection from "../create-collection";
 import deploy from "../deploy";
@@ -27,16 +29,19 @@ describe("shard", () => {
   });
 
   test("initialize storage", async () => {
+    await fund("operator", "user")
     await deploy("operator");
     await shallPass(createCollection("user"));
   });
 
   test("operator can mint", async () => {
+    await fund("operator")
     await deploy("operator");
     await shallPass(mint("operator"));
   });
 
   test("non-operator cannot mint", async () => {
+    await fund("operator", "non-operator")
     await deploy("operator");
     await shallRevert(mint("non-operator"));
   });

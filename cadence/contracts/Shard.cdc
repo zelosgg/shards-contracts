@@ -1,19 +1,30 @@
 import NonFungibleToken from 0xNonFungibleToken
 
+// Eternal
+// eternal.gg
+//
+// Three Shards are to be combined to form a Crystal.
+// Each Shard belongs to 1/3 of a moment.
 pub contract Shard: NonFungibleToken {
+    // Total supply also correlating to the next mint ID
     pub var totalSupply: UInt64
 
+    // Events
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
 
     pub resource NFT: NonFungibleToken.INFT {
+        // Identifier of NFT
         pub let id: UInt64
-
+        // Moment ID
+        pub let momentID: UInt64
+        // Metadata URI
         pub var metadata: {String: String}
 
-        init(initID: UInt64) {
+        init(initID: UInt64, momentID: UInt64) {
             self.id = initID
+            self.momentID = momentID
             self.metadata = {}
         }
     }
@@ -31,21 +42,18 @@ pub contract Shard: NonFungibleToken {
             let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
 
             emit Withdraw(id: token.id, from: self.owner?.address)
-
             return <-token
         }
 
         // Takes a NFT and adds it to the collections dictionary and adds the ID to the id array
         pub fun deposit(token: @NonFungibleToken.NFT) {
             let token <- token as! @Shard.NFT
-
             let id: UInt64 = token.id
 
             // Add the new token to the dictionary which removes the old one
             let oldToken <- self.ownedNFTs[id] <- token
 
             emit Deposit(id: id, to: self.owner?.address)
-
             destroy oldToken
         }
 
@@ -72,11 +80,11 @@ pub contract Shard: NonFungibleToken {
 
     // Resource that an admin or something similar would own to be
     // able to mint new NFTs
-    pub resource NFTMinter {
+    pub resource ShardMinter {
         // Mints a new NFT with a new ID
-        pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}) {
+        pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, momentID: UInt64) {
             // Creates a new NFT
-            var newNFT <- create NFT(initID: Shard.totalSupply)
+            var newNFT <- create NFT(initID: Shard.totalSupply, momentID: momentID)
 
             // Deposits it in the recipient's account using their reference
             recipient.deposit(token: <-newNFT)
@@ -94,18 +102,15 @@ pub contract Shard: NonFungibleToken {
         let collection <- create Collection()
         self.account.save(<-collection, to: /storage/ShardCollection)
 
-        // Publish a reference to the Collection in storage
-        self.account.link<&{NonFungibleToken.Receiver}>(/public/ShardCollection, target: /storage/ShardCollection)
-
         // Create a public capability for the collection
         self.account.link<&{NonFungibleToken.CollectionPublic}>(
-            /public/NFTCollection,
-            target: /storage/NFTCollection
+            /public/ShardCollection,
+            target: /storage/ShardCollection
         )
 
         // Create a Minter resource and save it to storage
-        let minter <- create NFTMinter()
-        self.account.save(<-minter, to: /storage/NFTMinter)
+        let minter <- create ShardMinter()
+        self.account.save(<-minter, to: /storage/ShardMinter)
 
         emit ContractInitialized()
     }

@@ -16,14 +16,14 @@ const createCollection = async (signer) => {
     import Shard from ${Shard}
     transaction {
         prepare(acct: AuthAccount) {
-            if acct.borrow<&Shard.Collection>(from: /storage/NFTCollection) != nil {
+            if acct.borrow<&Shard.Collection>(from: /storage/ShardCollection) != nil {
                 return
             }
             let collection <- Shard.createEmptyCollection()
-            acct.save(<-collection, to: /storage/NFTCollection)
+            acct.save(<-collection, to: /storage/ShardCollection)
             acct.link<&{NonFungibleToken.CollectionPublic}>(
-                /public/NFTCollection,
-                target: /storage/NFTCollection
+                /public/ShardCollection,
+                target: /storage/ShardCollection
             )
         }
     }
