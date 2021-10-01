@@ -7,10 +7,23 @@
 
 ## Development Testing
 
+### Dependencies
+
+- Yarn or NPM
+- [`flow-cli`](https://docs.onflow.org/flow-cli/install/)
+
+### Running
+
 - Install dependencies
 
 ```bash
 yarn # or npm i
+```
+
+- Initialize Flow
+
+```bash
+flow init
 ```
 
 - Run the test suite
