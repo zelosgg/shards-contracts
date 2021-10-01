@@ -1,16 +1,16 @@
 import {
-    sendTransaction,
-    getAccountAddress,
-    getContractAddress,
+  sendTransaction,
+  getAccountAddress,
+  getContractAddress,
 } from "flow-js-testing";
 
 const transfer = async (operator, from, to) => {
-    // Get the contract addresses
-    const NonFungibleToken = await getContractAddress("NonFungibleToken");
-    const Shard = await getContractAddress("Shard");
+  // Get the contract addresses
+  const NonFungibleToken = await getContractAddress("NonFungibleToken");
+  const Shard = await getContractAddress("Shard");
 
-    // The Cadence transaction code
-    const code = `
+  // The Cadence transaction code
+  const code = `
         import NonFungibleToken from ${NonFungibleToken}
         import Shard from ${Shard}
         transaction(recipient: Address, withdrawID: UInt64) {
@@ -27,16 +27,16 @@ const transfer = async (operator, from, to) => {
         }
     `;
 
-    // Transfer token #0 from sender to receiver
-    const args = [await getAccountAddress(to), 0];
-    const signers = [await getAccountAddress(from)];
+  // Transfer token #0 from sender to receiver
+  const args = [await getAccountAddress(to), 0];
+  const signers = [await getAccountAddress(from)];
 
-    // Send the transaction and return the result
-    return await sendTransaction({
-        code,
-        args,
-        signers,
-    });
+  // Send the transaction and return the result
+  return await sendTransaction({
+    code,
+    args,
+    signers,
+  });
 };
 
 export default transfer;

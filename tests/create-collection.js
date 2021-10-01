@@ -38,7 +38,7 @@ const createCollection = async (...signers) => {
   }
 
   // We need to return something for the unit test, so return the last tx
-  return tx
+  return tx;
 };
 
 export default createCollection;
