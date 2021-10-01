@@ -4,7 +4,7 @@ import {
   getContractAddress,
 } from "flow-js-testing";
 
-const createMoment = async (operator, momentID, sequence, metadataURI) => {
+const createClip = async (operator, clipID, sequence, metadataURI) => {
   // Get the contract addresses
   const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
@@ -21,14 +21,14 @@ const createMoment = async (operator, momentID, sequence, metadataURI) => {
         }
         execute {
             let seq = Shard.Sequence(rawValue: sequence)!
-            self.minter.createMoment(creatorID: creatorID, sequence: seq, metadata: metadata)
+            self.minter.createClip(creatorID: creatorID, sequence: seq, metadata: metadata)
         }
     }
   `;
 
   // Check optional parameters
-  if (momentID === undefined) {
-    momentID = Math.floor(Math.random() * 4294967295);
+  if (clipID === undefined) {
+    clipID = Math.floor(Math.random() * 4294967295);
   }
   if (sequence === undefined) {
     sequence = Math.floor(Math.random() * 3);
@@ -37,7 +37,7 @@ const createMoment = async (operator, momentID, sequence, metadataURI) => {
     metadataURI = "https://eternal.gg/metadata.json";
   }
 
-  const args = [momentID, sequence, metadataURI];
+  const args = [clipID, sequence, metadataURI];
   const signers = [await getAccountAddress(operator)];
 
   // Send the transaction and return the result
@@ -48,4 +48,4 @@ const createMoment = async (operator, momentID, sequence, metadataURI) => {
   });
 };
 
-export default createMoment;
+export default createClip;
