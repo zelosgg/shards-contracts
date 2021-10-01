@@ -1,4 +1,4 @@
-name: Cadence test suite
+name: Format
 
 on:
   push:
@@ -11,7 +11,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Prettify code
-        uses: creyD/prettier_action@v4.0
-        with:
-          prettier_options: --write **/*.{js,md}
+      - run: npm install -g prettier
+      - run: npm run format

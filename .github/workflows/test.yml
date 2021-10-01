@@ -9,12 +9,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x]
     steps:
       - uses: actions/checkout@v2
+      - name: Install flow CLI
+        run: sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+      - name: Initialize a flow.json
+        run: |
+          export PATH="$PATH:$HOME/.local/bin"
+          flow init
       - name: Install modules
-        run: yarn
+        run: npm install
       - name: Run tests
-        run: yarn test
+        run: npm run test

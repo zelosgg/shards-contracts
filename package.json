@@ -4,7 +4,8 @@
   "description": "## Contracts",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "format": "prettier --write **/*.{js,md}"
   },
   "author": "hexcowboy",
   "license": "ISC",
