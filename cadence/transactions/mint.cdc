@@ -5,10 +5,10 @@ import Shard from 0xShard
 // It must be run with the account that has the minter resource
 // stored in /storage/NFTMinter
 
-transaction(recipient: Address, momentID: UInt64, sequence: Shard.Sequence) {
-    let minter: &Shard.ShardMinter
+transaction(recipient: Address, momentID: UInt32) {
+    let minter: &Shard.Admin
     prepare(signer: AuthAccount) {
-        self.minter = signer.borrow<&Shard.ShardMinter>(from: /storage/ShardMinter)
+        self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
             ?? panic("Could not borrow a reference to the Shard minter")
     }
     execute {
@@ -16,6 +16,6 @@ transaction(recipient: Address, momentID: UInt64, sequence: Shard.Sequence) {
             .getCapability(/public/ShardCollection)
             .borrow<&{NonFungibleToken.CollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
-        self.minter.mintNFT(recipient: receiver, momentID: momentID, sequence: sequence)
+        self.minter.mintNFT(recipient: receiver, momentID: momentID)
     }
 }

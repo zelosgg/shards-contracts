@@ -38,7 +38,7 @@ describe("shard", () => {
     // Deploy all contracts from the operator account
     await deploy("operator");
     // Assert that operator can create new Moments
-    await shallPass(createMoment("operator"))
+    await shallPass(createMoment("operator"));
   });
 
   test("non-operator can't create new moment", async () => {
@@ -47,7 +47,7 @@ describe("shard", () => {
     // Deploy all contracts from the operator account
     await deploy("operator");
     // Assert that non-operator can't create new Moments
-    await shallRevert(createMoment("non-operator"))
+    await shallRevert(createMoment("non-operator"));
   });
 
   test("moment metadata cannot be empty", async () => {
@@ -56,8 +56,8 @@ describe("shard", () => {
     // Deploy all contracts from the operator account
     await deploy("operator");
     // Assert that non-operator can't create new Moments
-    await shallRevert(createMoment("operator", undefined, undefined, ""))
-  })
+    await shallRevert(createMoment("operator", undefined, undefined, ""));
+  });
 
   test("operator can mint", async () => {
     // Fund all involved accounts
@@ -67,8 +67,8 @@ describe("shard", () => {
     // Create collections for all involved accounts
     await createCollection("operator", "non-operator");
     // Create a new moment and get it's ID
-    const moment = await createMoment("operator")
-    const momentID = moment.events[0].data.id
+    const moment = await createMoment("operator");
+    const momentID = moment.events[0].data.id;
     // Assert the operator can mint
     await shallPass(mint("operator", "non-operator", momentID));
   });
@@ -81,8 +81,8 @@ describe("shard", () => {
     // Create collections for all involved accounts
     await createCollection("operator", "non-operator");
     // Create a new moment and get it's ID
-    const moment = await createMoment("operator")
-    const momentID = moment.events[0].data.id
+    const moment = await createMoment("operator");
+    const momentID = moment.events[0].data.id;
     // Assert non-operators cannot mint
     await shallRevert(mint("non-operator", "non-operator", momentID));
   });
@@ -96,7 +96,7 @@ describe("shard", () => {
     await createCollection("operator", "non-operator");
     // Assert that invalid moment ID reverts
     await shallRevert(mint("non-operator", "non-operator", 5));
-  })
+  });
 
   test("owner can transfer", async () => {
     // Fund all involved accounts
@@ -106,8 +106,8 @@ describe("shard", () => {
     // Create a collections for all involved accounts
     await createCollection("operator", "sender", "receiver");
     // Create a new moment and get it's ID
-    const moment = await createMoment("operator")
-    const momentID = moment.events[0].data.id
+    const moment = await createMoment("operator");
+    const momentID = moment.events[0].data.id;
     // Mint an NFT to the sender
     await mint("operator", "sender", momentID);
     // Assert sender can transfer their NFT
@@ -122,8 +122,8 @@ describe("shard", () => {
     // Create a collections for all involved accounts
     await createCollection("operator", "sender", "receiver");
     // Create a new moment and get it's ID
-    const moment = await createMoment("operator")
-    const momentID = moment.events[0].data.id
+    const moment = await createMoment("operator");
+    const momentID = moment.events[0].data.id;
     // Mint an NFT to the sender
     await mint("operator", "sender", momentID);
     // Assert receiver cannot transfer since they don't have an NFT
