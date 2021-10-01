@@ -21,7 +21,7 @@ pub contract Shard: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event MomentCreated(id: UInt32, creatorID: UInt32)
+    pub event MomentCreated(id: UInt32, creatorID: String)
     pub event ClipCreated(id: UInt32, momentID: UInt32, sequence: UInt8, metadata: {String: String})
     pub event ShardMinted(id: UInt64, clipID: UInt32)
 
@@ -37,12 +37,12 @@ pub contract Shard: NonFungibleToken {
         pub let id: UInt32
 
         // The creator that the Moment belongs to
-        pub let creatorID: UInt32
+        pub let creatorID: String
 
         // The metadata for a Moment
         pub let metadata: {String: String}
 
-        init(creatorID: UInt32, metadata: {String: String}) {
+        init(creatorID: String, metadata: {String: String}) {
             pre {
                 metadata.length > 0: "Metadata cannot be empty"
             }
@@ -50,9 +50,6 @@ pub contract Shard: NonFungibleToken {
             self.id = Shard.totalMoments
             self.creatorID = creatorID
             self.metadata = metadata
-
-            // Increment the ID so that it isn't used again
-            Shard.totalMoments = Shard.totalMoments + (1 as UInt32)
 
             // Broadcast the new Moment's data
             emit MomentCreated(id: self.id, creatorID: self.creatorID)
@@ -161,7 +158,7 @@ pub contract Shard: NonFungibleToken {
     // A special authorization resource with administrative functions
     pub resource Admin {
         // Creates a new Moment and returns the ID
-        pub fun createMoment(creatorID: UInt32, metadata: {String: String}): UInt32 {
+        pub fun createMoment(creatorID: String, metadata: {String: String}): UInt32 {
             var newMoment = Moment(creatorID: creatorID, metadata: metadata)
             let newID = newMoment.id
 
