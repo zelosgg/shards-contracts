@@ -4,7 +4,7 @@ import {
   getContractAddress,
 } from "flow-js-testing";
 
-const mint = async (from, to) => {
+const mint = async (from, to, momentID) => {
   // Get the contract addresses
   const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
@@ -13,7 +13,7 @@ const mint = async (from, to) => {
   const code = `
     import NonFungibleToken from ${NonFungibleToken}
     import Shard from ${Shard}
-    transaction(recipient: Address, momentID: UInt64) {
+    transaction(recipient: Address, momentID: UInt32) {
         let minter: &Shard.Admin
         prepare(signer: AuthAccount) {
             self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
@@ -30,7 +30,6 @@ const mint = async (from, to) => {
   `;
 
   // Create a new account from the given signer parameter
-  const momentID = Math.floor(Math.random() * 18446744073709551615);
   const args = [await getAccountAddress(to), momentID];
   const signers = [await getAccountAddress(from)];
 

@@ -15,6 +15,8 @@ pub contract Shard: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
+    pub event ShardCreated(id: UInt32, creatorID: UInt32, sequence: UInt8, metadata: {String: String})
+    pub event ShardMinted(id: UInt64, momentID: UInt32)
 
     // Structure defining the portion of a moment
     pub enum Sequence: UInt8 {
@@ -48,6 +50,13 @@ pub contract Shard: NonFungibleToken {
 
             // Increment the ID so that it isn't used again
             Shard.totalMoments = Shard.totalMoments + (1 as UInt32)
+
+            emit ShardCreated(
+                id: self.id,
+                creatorID: self.creatorID,
+                sequence: self.sequence.rawValue,
+                metadata: self.metadata
+            )
         }
     }
 
@@ -56,14 +65,17 @@ pub contract Shard: NonFungibleToken {
         pub let id: UInt64
 
         // Moment ID corresponding to the Shard
-        pub let momentID: UInt64
+        pub let momentID: UInt32
 
-        init(
-            initID: UInt64,
-            momentID: UInt64,
-        ) {
+        init(initID: UInt64, momentID: UInt32) {
+            pre {
+                Shard.moments.containsKey(momentID): "Moment ID does not exist"
+            }
+
             self.id = initID
             self.momentID = momentID
+
+            emit ShardMinted(id: self.id, momentID: self.momentID)
         }
     }
 
@@ -111,12 +123,20 @@ pub contract Shard: NonFungibleToken {
         }
     }
 
-    // Admin is a special authorization resource that allows the owner to perform important functions
+    // A special authorization resource with administrative functions
     pub resource Admin {
         // Creates a new Moment struct and returns the ID
-        pub fun createMoment(creatorID: UInt32, sequence: Sequence, metadata: {String: String}): UInt32 {
-            // Create the new Play
-            var newMoment = Moment(creatorID: creatorID, sequence: sequence, metadata: metadata)
+        pub fun createMoment(
+            creatorID: UInt32,
+            sequence: Sequence,
+            metadata: {String: String}
+        ): UInt32 {
+            // Create the new Moment
+            var newMoment = Moment(
+                creatorID: creatorID,
+                sequence: sequence,
+                metadata: metadata
+            )
             let newID = newMoment.id
 
             // Store it in the contract storage
@@ -128,7 +148,7 @@ pub contract Shard: NonFungibleToken {
         // Mints a new NFT with a new ID
         pub fun mintNFT(
             recipient: &{NonFungibleToken.CollectionPublic},
-            momentID: UInt64,
+            momentID: UInt32,
         ) {
             // Creates a new NFT with provided arguments
             var newNFT <- create NFT(
