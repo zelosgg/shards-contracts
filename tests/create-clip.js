@@ -4,32 +4,27 @@ import {
   getContractAddress,
 } from "flow-js-testing";
 
-const createClip = async (operator, clipID, sequence, metadataURI) => {
+const createClip = async (operator, momentID, sequence, metadataURI) => {
   // Get the contract addresses
-  const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
 
   // The Cadence transaction code
   const code = `
-    import NonFungibleToken from ${NonFungibleToken}
-    import Shard from ${Shard}
-    transaction(creatorID: UInt32, sequence: UInt8, metadata: {String: String}) {
-        let minter: &Shard.Admin
-        prepare(signer: AuthAccount) {
-            self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
-                ?? panic("Could not borrow a reference to the Shard minter")
-        }
-        execute {
-            let seq = Shard.Sequence(rawValue: sequence)!
-            self.minter.createClip(creatorID: creatorID, sequence: seq, metadata: metadata)
-        }
-    }
+      import Shard from ${Shard}
+      transaction(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
+          let minter: &Shard.Admin
+          prepare(signer: AuthAccount) {
+              self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
+                  ?? panic("Could not borrow a reference to the Shard minter")
+          }
+          execute {
+              let seq = Shard.Sequence(rawValue: sequence)!
+              self.minter.createClip(momentID: momentID, sequence: seq, metadata: metadata)
+          }
+      }
   `;
 
   // Check optional parameters
-  if (clipID === undefined) {
-    clipID = Math.floor(Math.random() * 4294967295);
-  }
   if (sequence === undefined) {
     sequence = Math.floor(Math.random() * 3);
   }
@@ -37,7 +32,7 @@ const createClip = async (operator, clipID, sequence, metadataURI) => {
     metadataURI = "https://eternal.gg/metadata.json";
   }
 
-  const args = [clipID, sequence, metadataURI];
+  const args = [momentID, sequence, metadataURI];
   const signers = [await getAccountAddress(operator)];
 
   // Send the transaction and return the result
