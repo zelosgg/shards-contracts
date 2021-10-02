@@ -21,7 +21,7 @@ pub contract Shard: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event MomentCreated(id: UInt32, influencerID: String, metadata: {String: String})
+    pub event MomentCreated(id: UInt32, influencerID: String, splits: UInt8, metadata: {String: String})
     pub event ClipCreated(id: UInt32, momentID: UInt32, sequence: UInt8, metadata: {String: String})
     pub event ShardMinted(id: UInt64, clipID: UInt32)
 
@@ -32,22 +32,27 @@ pub contract Shard: NonFungibleToken {
         // The influencer that the Moment belongs to
         pub let influencerID: String
 
+        // The amount of Clips the Moments splits into
+        pub let splits: UInt8
+
         // The metadata for a Moment
         pub let metadata: {String: String}
 
-        init(influencerID: String, metadata: {String: String}) {
+        init(influencerID: String, splits: UInt8, metadata: {String: String}) {
             pre {
                 metadata.length > 0: "Metadata cannot be empty"
             }
 
             self.id = Shard.totalMoments
             self.influencerID = influencerID
+            self.splits = splits
             self.metadata = metadata
 
             // Broadcast the new Moment's data
             emit MomentCreated(
                 id: self.id,
                 influencerID: self.influencerID,
+                splits: self.splits,
                 metadata: self.metadata
             )
         }
@@ -68,6 +73,8 @@ pub contract Shard: NonFungibleToken {
 
         init(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
             pre {
+                Shard.moments.containsKey(momentID): "Provided Moment ID does not exist"
+                Shard.moments[momentID]!.splits > sequence: "The Sequence must be within the Moment's splits limit"
                 metadata.length > 0: "Metadata cannot be empty"
             }
 
@@ -155,8 +162,8 @@ pub contract Shard: NonFungibleToken {
     // A special authorization resource with administrative functions
     pub resource Admin {
         // Creates a new Moment and returns the ID
-        pub fun createMoment(influencerID: String, metadata: {String: String}): UInt32 {
-            var newMoment = Moment(influencerID: influencerID, metadata: metadata)
+        pub fun createMoment(influencerID: String, splits: UInt8, metadata: {String: String}): UInt32 {
+            var newMoment = Moment(influencerID: influencerID, splits: splits, metadata: metadata)
             let newID = newMoment.id
 
             // Store it in the contract storage
@@ -171,9 +178,6 @@ pub contract Shard: NonFungibleToken {
             sequence: UInt8,
             metadata: {String: String}
         ): UInt32 {
-            // Verify the Moment exists
-            Shard.moments[momentID]!
-
             // Create the new Clip
             var newClip = Clip(
                 momentID: momentID,
@@ -193,9 +197,6 @@ pub contract Shard: NonFungibleToken {
             recipient: &{NonFungibleToken.CollectionPublic},
             clipID: UInt32
         ) {
-            // Verify the Clip exists
-            Shard.clips[clipID]!
-
             // Creates a new NFT with provided arguments
             var newNFT <- create NFT(
                 initID: Shard.totalSupply,
