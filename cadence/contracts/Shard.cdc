@@ -5,56 +5,85 @@ pub contract Shard: NonFungibleToken {
     // Total amount of Shards that have been minted
     pub var totalSupply: UInt64
 
-    // Total amount of Moments that have been minted
+    // Total amount of Clips that have been created
+    pub var totalClips: UInt32
+
+    // Total amount of Moments that have been created
     pub var totalMoments: UInt32
 
     // Variable size dictionary of Moment structs
     access(self) var moments: {UInt32: Moment}
 
+    // Variable size dictionary of Clip structs
+    access(self) var clips: {UInt32: Clip}
+
     // Events
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event ShardCreated(id: UInt32, creatorID: UInt32, sequence: UInt8, metadata: {String: String})
-    pub event ShardMinted(id: UInt64, momentID: UInt32)
-
-    // Structure defining the portion of a moment
-    pub enum Sequence: UInt8 {
-        pub case beginning
-        pub case middle
-        pub case end
-    }
+    pub event MomentCreated(id: UInt32, influencerID: String, metadata: {String: String})
+    pub event ClipCreated(id: UInt32, momentID: UInt32, sequence: UInt8, metadata: {String: String})
+    pub event ShardMinted(id: UInt64, clipID: UInt32)
 
     pub struct Moment {
-        // The unique ID for the Moment
+        // The unique ID of the Moment
         pub let id: UInt32
 
-        // Represents the creator of the Moment
-        pub let creatorID: UInt32
+        // The influencer that the Moment belongs to
+        pub let influencerID: String
 
-        // The sequence of the provided moment
-        pub let sequence: Sequence
-
-        // Stores all the metadata about the play as a string mapping
+        // The metadata for a Moment
         pub let metadata: {String: String}
 
-        init(creatorID: UInt32, sequence: Sequence, metadata: {String: String}) {
+        init(influencerID: String, metadata: {String: String}) {
             pre {
                 metadata.length > 0: "Metadata cannot be empty"
             }
 
             self.id = Shard.totalMoments
-            self.creatorID = creatorID
+            self.influencerID = influencerID
+            self.metadata = metadata
+
+            // Broadcast the new Moment's data
+            emit MomentCreated(
+                id: self.id,
+                influencerID: self.influencerID,
+                metadata: self.metadata
+            )
+        }
+    }
+
+    pub struct Clip {
+        // The unique ID of the Clip
+        pub let id: UInt32
+
+        // The moment the Clip belongs to
+        pub let momentID: UInt32
+
+        // The sequence of the provided clip
+        pub let sequence: UInt8
+
+        // Stores all the metadata about the Clip as a string mapping
+        pub let metadata: {String: String}
+
+        init(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
+            pre {
+                metadata.length > 0: "Metadata cannot be empty"
+            }
+
+            self.id = Shard.totalClips
+            self.momentID = momentID
             self.sequence = sequence
             self.metadata = metadata
 
             // Increment the ID so that it isn't used again
-            Shard.totalMoments = Shard.totalMoments + (1 as UInt32)
+            Shard.totalClips = Shard.totalClips + (1 as UInt32)
 
-            emit ShardCreated(
+            // Broadcast the new Clip's data
+            emit ClipCreated(
                 id: self.id,
-                creatorID: self.creatorID,
-                sequence: self.sequence.rawValue,
+                momentID: self.momentID,
+                sequence: self.sequence,
                 metadata: self.metadata
             )
         }
@@ -64,18 +93,18 @@ pub contract Shard: NonFungibleToken {
         // Identifier of NFT
         pub let id: UInt64
 
-        // Moment ID corresponding to the Shard
-        pub let momentID: UInt32
+        // Clip ID corresponding to the Shard
+        pub let clipID: UInt32
 
-        init(initID: UInt64, momentID: UInt32) {
+        init(initID: UInt64, clipID: UInt32) {
             pre {
-                Shard.moments.containsKey(momentID): "Moment ID does not exist"
+                Shard.clips.containsKey(clipID): "Clip ID does not exist"
             }
 
             self.id = initID
-            self.momentID = momentID
+            self.clipID = clipID
 
-            emit ShardMinted(id: self.id, momentID: self.momentID)
+            emit ShardMinted(id: self.id, clipID: self.clipID)
         }
     }
 
@@ -125,18 +154,9 @@ pub contract Shard: NonFungibleToken {
 
     // A special authorization resource with administrative functions
     pub resource Admin {
-        // Creates a new Moment struct and returns the ID
-        pub fun createMoment(
-            creatorID: UInt32,
-            sequence: Sequence,
-            metadata: {String: String}
-        ): UInt32 {
-            // Create the new Moment
-            var newMoment = Moment(
-                creatorID: creatorID,
-                sequence: sequence,
-                metadata: metadata
-            )
+        // Creates a new Moment and returns the ID
+        pub fun createMoment(influencerID: String, metadata: {String: String}): UInt32 {
+            var newMoment = Moment(influencerID: influencerID, metadata: metadata)
             let newID = newMoment.id
 
             // Store it in the contract storage
@@ -145,15 +165,41 @@ pub contract Shard: NonFungibleToken {
             return newID
         }
 
+        // Creates a new Clip struct and returns the ID
+        pub fun createClip(
+            momentID: UInt32,
+            sequence: UInt8,
+            metadata: {String: String}
+        ): UInt32 {
+            // Verify the Moment exists
+            Shard.moments[momentID]!
+
+            // Create the new Clip
+            var newClip = Clip(
+                momentID: momentID,
+                sequence: sequence,
+                metadata: metadata
+            )
+            var newID = newClip.id
+
+            // Store it in the contract storage
+            Shard.clips[newID] = newClip
+
+            return newID
+        }
+
         // Mints a new NFT with a new ID
         pub fun mintNFT(
             recipient: &{NonFungibleToken.CollectionPublic},
-            momentID: UInt32,
+            clipID: UInt32
         ) {
+            // Verify the Clip exists
+            Shard.clips[clipID]!
+
             // Creates a new NFT with provided arguments
             var newNFT <- create NFT(
                 initID: Shard.totalSupply,
-                momentID: momentID
+                clipID: clipID
             )
 
             // Deposits it in the recipient's account using their reference
@@ -161,6 +207,19 @@ pub contract Shard: NonFungibleToken {
 
             // Increase the total supply counter
             Shard.totalSupply = Shard.totalSupply + (1 as UInt64)
+        }
+
+        pub fun batchMintNFT(
+            recipient: &{NonFungibleToken.CollectionPublic},
+            clipID: UInt32,
+            quantity: UInt64
+
+        ) {
+            var i: UInt64 = 0
+            while i < quantity {
+                self.mintNFT(recipient: recipient, clipID: clipID)
+                i = i + (1 as UInt64)
+            }
         }
 
         // Creates a new Admin resource to be given to an account
@@ -174,23 +233,42 @@ pub contract Shard: NonFungibleToken {
         return <- create Collection()
     }
 
-    // Publicly get metadata for a given moment ID
-    pub fun getPlayMetadata(momentID: UInt32): {String: String}? {
+    // Publicly get a Moment for a given Moment ID
+    pub fun getMoment(momentID: UInt32): Moment? {
+        return self.moments[momentID]
+    }
+
+    // Publicly get a Clip for a given Clip ID
+    pub fun getClip(clipID: UInt32): Clip? {
+        return self.clips[clipID]
+    }
+
+    // Publicly get metadata for a given Moment ID
+    pub fun getMomentMetadata(momentID: UInt32): {String: String}? {
         return self.moments[momentID]?.metadata
     }
 
-    // Publicly get all Moments
-    pub fun getAllMoments(): [Shard.Moment] {
-        return Shard.moments.values
+    // Publicly get metadata for a given Clip ID
+    pub fun getClipMetadata(clipID: UInt32): {String: String}? {
+        return self.clips[clipID]?.metadata
+    }
+
+    // Publicly get all Clips
+    pub fun getAllClips(): [Shard.Clip] {
+        return Shard.clips.values
     }
 
     init() {
-        // Initialize the total supply
+        // Initialize the total supplies
         self.totalSupply = 0
         self.totalMoments = 0
+        self.totalClips = 0
 
-        // Initialize with an empty set of moments
+        // Initialize with an empty set of Moments
         self.moments = {}
+
+        // Initialize with an empty set of Clips
+        self.clips = {}
 
         // Create a Collection resource and save it to storage
         let collection <- create Collection()
