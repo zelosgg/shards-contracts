@@ -18,15 +18,14 @@ const createClip = async (operator, momentID, sequence, metadataURI) => {
                   ?? panic("Could not borrow a reference to the Shard minter")
           }
           execute {
-              let seq = Shard.Sequence(rawValue: sequence)!
-              self.minter.createClip(momentID: momentID, sequence: seq, metadata: metadata)
+              self.minter.createClip(momentID: momentID, sequence: sequence, metadata: metadata)
           }
       }
   `;
 
   // Check optional parameters
   if (sequence === undefined) {
-    sequence = Math.floor(Math.random() * 3);
+    sequence = Math.floor(Math.random() * 255);
   }
   if (metadataURI === undefined) {
     metadataURI = "https://eternal.gg/metadata.json";

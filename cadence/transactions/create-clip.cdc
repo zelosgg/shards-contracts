@@ -11,7 +11,6 @@ transaction(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
             ?? panic("Could not borrow a reference to the Shard minter")
     }
     execute {
-        let seq = Shard.Sequence(rawValue: sequence)!
         self.minter.createClip(momentID: momentID, sequence: seq, metadata: metadata)
     }
 }

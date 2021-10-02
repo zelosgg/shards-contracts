@@ -25,13 +25,6 @@ pub contract Shard: NonFungibleToken {
     pub event ClipCreated(id: UInt32, momentID: UInt32, sequence: UInt8, metadata: {String: String})
     pub event ShardMinted(id: UInt64, clipID: UInt32)
 
-    // Structure defining the portion of a Clip
-    pub enum Sequence: UInt8 {
-        pub case beginning
-        pub case middle
-        pub case end
-    }
-
     pub struct Moment {
         // The unique ID of the Moment
         pub let id: UInt32
@@ -64,12 +57,12 @@ pub contract Shard: NonFungibleToken {
         pub let momentID: UInt32
 
         // The sequence of the provided clip
-        pub let sequence: Sequence
+        pub let sequence: UInt8
 
         // Stores all the metadata about the Clip as a string mapping
         pub let metadata: {String: String}
 
-        init(momentID: UInt32, sequence: Sequence, metadata: {String: String}) {
+        init(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
             pre {
                 metadata.length > 0: "Metadata cannot be empty"
             }
@@ -86,7 +79,7 @@ pub contract Shard: NonFungibleToken {
             emit ClipCreated(
                 id: self.id,
                 momentID: self.momentID,
-                sequence: self.sequence.rawValue,
+                sequence: self.sequence,
                 metadata: self.metadata
             )
         }
@@ -171,7 +164,7 @@ pub contract Shard: NonFungibleToken {
         // Creates a new Clip struct and returns the ID
         pub fun createClip(
             momentID: UInt32,
-            sequence: Sequence,
+            sequence: UInt8,
             metadata: {String: String}
         ): UInt32 {
             // Verify the Moment exists
