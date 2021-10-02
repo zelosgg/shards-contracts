@@ -194,7 +194,7 @@ pub contract Shard: NonFungibleToken {
         // Mints a new NFT with a new ID
         pub fun mintNFT(
             recipient: &{NonFungibleToken.CollectionPublic},
-            clipID: UInt32,
+            clipID: UInt32
         ) {
             // Verify the Clip exists
             Shard.clips[clipID]!
@@ -210,6 +210,19 @@ pub contract Shard: NonFungibleToken {
 
             // Increase the total supply counter
             Shard.totalSupply = Shard.totalSupply + (1 as UInt64)
+        }
+
+        pub fun batchMintNFT(
+            recipient: &{NonFungibleToken.CollectionPublic},
+            clipID: UInt32,
+            quantity: UInt64
+
+        ) {
+            var i: UInt64 = 0
+            while i < quantity {
+                self.mintNFT(recipient: recipient, clipID: clipID)
+                i = i + (1 as UInt64)
+            }
         }
 
         // Creates a new Admin resource to be given to an account

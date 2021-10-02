@@ -1,11 +1,10 @@
 import NonFungibleToken from 0xNonFungibleToken
 import Shard from 0xShard
 
-// This script uses the NFTMinter resource to mint a new NFT
-// It must be run with the account that has the minter resource
-// stored in /storage/NFTMinter
+// This script uses the Shard.Admin resource to mint a batch of new NFTs
+// The sender is required to be a Shard Admin
 
-transaction(recipient: Address, clipID: UInt32) {
+transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
     let minter: &Shard.Admin
     prepare(signer: AuthAccount) {
         self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
@@ -16,6 +15,6 @@ transaction(recipient: Address, clipID: UInt32) {
             .getCapability(/public/ShardCollection)
             .borrow<&{NonFungibleToken.CollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
-        self.minter.mintNFT(recipient: receiver, clipID: clipID)
+        self.minter.batchMintNFT(recipient: receiver, clipID: clipID, quantity: quantity)
     }
 }
