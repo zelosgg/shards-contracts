@@ -21,7 +21,7 @@ pub contract Shard: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event MomentCreated(id: UInt32, influencerID: String, metadata: {String: String})
+    pub event MomentCreated(id: UInt32, influencerID: String, splits: UInt8, metadata: {String: String})
     pub event ClipCreated(id: UInt32, momentID: UInt32, sequence: UInt8, metadata: {String: String})
     pub event ShardMinted(id: UInt64, clipID: UInt32)
 
@@ -49,7 +49,12 @@ pub contract Shard: NonFungibleToken {
             self.metadata = metadata
 
             // Broadcast the new Moment's data
-            emit MomentCreated(id: self.id, influencerID: self.influencerID, metadata: self.metadata)
+            emit MomentCreated(
+                id: self.id,
+                influencerID: self.influencerID,
+                splits: self.splits,
+                metadata: self.metadata
+            )
         }
     }
 
