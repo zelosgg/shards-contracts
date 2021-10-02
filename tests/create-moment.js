@@ -11,14 +11,14 @@ const createMoment = async (operator, creatorID, metadataURI) => {
   // The Cadence transaction code
   const code = `
         import Shard from ${Shard}
-        transaction(creatorID: String, metadata: {String: String}) {
+        transaction(influencerID: String, metadata: {String: String}) {
             let minter: &Shard.Admin
             prepare(signer: AuthAccount) {
                 self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
                     ?? panic("Could not borrow a reference to the Shard minter")
             }
             execute {
-                self.minter.createMoment(creatorID: creatorID, metadata: metadata)
+                self.minter.createMoment(influencerID: influencerID, metadata: metadata)
             }
         }
     `;

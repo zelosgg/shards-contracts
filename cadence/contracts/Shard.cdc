@@ -21,7 +21,7 @@ pub contract Shard: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event MomentCreated(id: UInt32, creatorID: String)
+    pub event MomentCreated(id: UInt32, influencerID: String)
     pub event ClipCreated(id: UInt32, momentID: UInt32, sequence: UInt8, metadata: {String: String})
     pub event ShardMinted(id: UInt64, clipID: UInt32)
 
@@ -29,23 +29,23 @@ pub contract Shard: NonFungibleToken {
         // The unique ID of the Moment
         pub let id: UInt32
 
-        // The creator that the Moment belongs to
-        pub let creatorID: String
+        // The influencer that the Moment belongs to
+        pub let influencerID: String
 
         // The metadata for a Moment
         pub let metadata: {String: String}
 
-        init(creatorID: String, metadata: {String: String}) {
+        init(influencerID: String, metadata: {String: String}) {
             pre {
                 metadata.length > 0: "Metadata cannot be empty"
             }
 
             self.id = Shard.totalMoments
-            self.creatorID = creatorID
+            self.influencerID = influencerID
             self.metadata = metadata
 
             // Broadcast the new Moment's data
-            emit MomentCreated(id: self.id, creatorID: self.creatorID)
+            emit MomentCreated(id: self.id, influencerID: self.influencerID)
         }
     }
 
@@ -151,8 +151,8 @@ pub contract Shard: NonFungibleToken {
     // A special authorization resource with administrative functions
     pub resource Admin {
         // Creates a new Moment and returns the ID
-        pub fun createMoment(creatorID: String, metadata: {String: String}): UInt32 {
-            var newMoment = Moment(creatorID: creatorID, metadata: metadata)
+        pub fun createMoment(influencerID: String, metadata: {String: String}): UInt32 {
+            var newMoment = Moment(influencerID: influencerID, metadata: metadata)
             let newID = newMoment.id
 
             // Store it in the contract storage
