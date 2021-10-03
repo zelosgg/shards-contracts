@@ -34,77 +34,85 @@ describe("shard", () => {
     await shallPass(createCollection("user"));
   });
 
-  test("operator can create new moment", async () => {
-    // Fund all involved accounts
-    await fund("operator");
-    // Deploy all contracts from the operator account
-    await deploy("operator");
-    // Assert that operator can create new Clips
-    await shallPass(createMoment("operator"));
-  });
+  describe("moments", () => {
+    beforeEach(async () => {
+      // Fund all involved accounts
+      await fund("operator", "non-operator");
+      // Deploy all contracts from the operator account
+      await deploy("operator");
+    });
 
-  test("non-operator can't create new moment", async () => {
-    // Fund all involved accounts
-    await fund("operator", "non-operator");
-    // Deploy all contracts from the operator account
-    await deploy("operator");
-    // Assert that operator can create new Clips
-    await shallRevert(createMoment("non-operator"));
-  });
+    test("operator can create new moment", async () => {
+      // Assert that operator can create new Clips
+      await shallPass(createMoment("operator"));
+    });
 
-  test("creator metadata cannot be empty", async () => {
-    // Fund all involved accounts
-    await fund("operator");
-    // Deploy all contracts from the operator account
-    await deploy("operator");
-    // Assert that operator can create new Clips
-    await shallRevert(createMoment("operator", undefined, ""));
-  });
+    test("non-operator can't create new moment", async () => {
+      // Assert that operator can create new Clips
+      await shallRevert(createMoment("non-operator"));
+    });
 
-  test("operator can create new clip", async () => {
-    // Fund all involved accounts
-    await fund("operator");
-    // Deploy all contracts from the operator account
-    await deploy("operator");
-    // Create a new Moment
-    const moment = await createMoment("operator");
-    const momentID = moment.events[0].data.id;
-    // Assert that operator can create new Clips
-    await shallPass(createClip("operator", momentID));
-  });
+    test("creator metadata cannot be empty", async () => {
+      // Assert that operator can create new Clips
+      await shallRevert(createMoment("operator", undefined, undefined, ""));
+    });
+  })
 
-  test("non-operator can't create new clip", async () => {
-    // Fund all involved accounts
-    await fund("operator", "non-operator");
-    // Deploy all contracts from the operator account
-    await deploy("operator");
-    // Create a new Moment
-    const moment = await createMoment("operator");
-    const momentID = moment.events[0].data.id;
-    // Assert that non-operator can't create new Clips
-    await shallRevert(createClip("non-operator", momentID));
-  });
+  describe("clips", () => {
+    beforeEach(async () => {
+      // Fund all involved accounts
+      await fund("operator", "non-operator");
+      // Deploy all contracts from the operator account
+      await deploy("operator");
+    });
 
-  test("clip metadata cannot be empty", async () => {
-    // Fund all involved accounts
-    await fund("operator");
-    // Deploy all contracts from the operator account
-    await deploy("operator");
-    // Create a new Moment
-    const moment = await createMoment("operator");
-    const momentID = moment.events[0].data.id;
-    // Assert that non-operator can't create new Clips
-    await shallRevert(createClip("operator", momentID, ""));
-  });
+    test("operator can create new clip", async () => {
+      // Create a new Moment
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
+      const momentID = moment.events[0].data.id;
+      // Assert that operator can create new Clips
+      await shallPass(createClip("operator", momentID, splitLimit - 1));
+    });
 
-  test("new clip must have valid moment ID", async () => {
-    // Fund all involved accounts
-    await fund("operator");
-    // Deploy all contracts from the operator account
-    await deploy("operator");
-    // Assert that operator can create new Clips
-    await shallRevert(createClip("operator", 55));
-  });
+    test("non-operator can't create new clip", async () => {
+      // Create a new Moment
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
+      const momentID = moment.events[0].data.id;
+      // Assert that non-operator can't create new Clips
+      await shallRevert(createClip("non-operator", momentID, splitLimit - 1));
+    });
+
+    test("clip metadata cannot be empty", async () => {
+      // Create a new Moment
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
+      const momentID = moment.events[0].data.id;
+      // Assert that non-operator can't create new Clips
+      await shallRevert(createClip("operator", momentID, splitLimit - 1, ""));
+    });
+
+    test("new clip must have valid moment ID", async () => {
+      // Create a new Moment
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
+      const momentID = moment.events[0].data.id;
+      // Assert that operator can create new Clips
+      await shallRevert(createClip("operator", momentID + 1, splitLimit - 1, ""));
+    });
+
+    test("new clip must be within moment's split limit", async () => {
+      // Create a new Moment
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
+      const momentID = moment.events[0].data.id;
+      // Assert that it can be inside of the limit
+      await shallPass(createClip("operator", momentID, splitLimit - 1));
+      // // Assert that it cannot be outside of the limit
+      await shallRevert(createClip("operator", momentID, splitLimit));
+    })
+  })
 
   describe("minting", () => {
     beforeEach(async () => {
@@ -118,10 +126,11 @@ describe("shard", () => {
 
     test("operator can mint", async () => {
       // Create a new Moment
-      const moment = await createMoment("operator");
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
-      const clip = await createClip("operator", momentID);
+      const clip = await createClip("operator", momentID, splitLimit - 1);
       const clipID = clip.events[0].data.id;
       // Assert the operator can mint
       await shallPass(mint("operator", "non-operator", clipID));
@@ -129,10 +138,11 @@ describe("shard", () => {
 
     test("non-operator cannot mint", async () => {
       // Create a new Moment
-      const moment = await createMoment("operator");
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
-      const clip = await createClip("operator", momentID);
+      const clip = await createClip("operator", momentID, splitLimit - 1);
       const clipID = clip.events[0].data.id;
       // Assert non-operators cannot mint
       await shallRevert(mint("non-operator", "non-operator", clipID));
@@ -140,56 +150,56 @@ describe("shard", () => {
 
     test("batch minting", async () => {
       // Create a new Moment
-      const moment = await createMoment("operator");
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
-      const clip = await createClip("operator", momentID);
+      const clip = await createClip("operator", momentID, splitLimit - 1);
       const clipID = clip.events[0].data.id;
       // Assert the operator can mint
       await shallPass(mintBatch("operator", "non-operator", clipID));
     });
 
     test("new mints must have valid clip ID", async () => {
+      // Create a new Moment
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
+      const momentID = moment.events[0].data.id;
+      // Create a new clip and get it's ID
+      const clip = await createClip("operator", momentID, splitLimit - 1);
+      const clipID = clip.events[0].data.id;
       // Assert that invalid clip ID reverts
-      await shallRevert(mint("operator", "operator", 55));
+      await shallRevert(mint("operator", "operator", clipID + 1));
     });
   });
 
-  test("owner can transfer", async () => {
-    // Fund all involved accounts
-    await fund("operator", "sender", "receiver");
-    // Deploy all contracts
-    await deploy("operator");
-    // Create a collections for all involved accounts
-    await createCollection("operator", "sender", "receiver");
-    // Create a new Moment
-    const moment = await createMoment("operator");
-    const momentID = moment.events[0].data.id;
-    // Create a new clip and get it's ID
-    const clip = await createClip("operator", momentID);
-    const clipID = clip.events[0].data.id;
-    // Mint an NFT to the sender
-    await mint("operator", "sender", clipID);
-    // Assert sender can transfer their NFT
-    await shallPass(transfer("operator", "sender", "receiver"));
-  });
+  describe("transfers", () => {
+    beforeEach(async () => {
+      // Fund all involved accounts
+      await fund("operator", "sender", "receiver");
+      // Deploy all contracts from the operator account
+      await deploy("operator");
+      // Create collections for all involved accounts
+      await createCollection("operator", "sender", "receiver");
+      // Create a new Moment
+      const splitLimit = Math.floor(Math.random() * 255)
+      const moment = await createMoment("operator", undefined, splitLimit);
+      const momentID = moment.events[0].data.id;
+      // Create a new clip and get it's ID
+      const clip = await createClip("operator", momentID, splitLimit - 1);
+      const clipID = clip.events[0].data.id;
+      // Mint an NFT to the sender
+      await mint("operator", "sender", clipID);
+    });
 
-  test("non-owner can't transfer", async () => {
-    // Fund all involved accounts
-    await fund("operator", "sender", "receiver");
-    // Deploy all contracts
-    await deploy("operator");
-    // Create a collections for all involved accounts
-    await createCollection("operator", "sender", "receiver");
-    // Create a new Moment
-    const moment = await createMoment("operator");
-    const momentID = moment.events[0].data.id;
-    // Create a new clip and get it's ID
-    const clip = await createClip("operator", momentID);
-    const clipID = clip.events[0].data.id;
-    // Mint an NFT to the sender
-    await mint("operator", "sender", clipID);
-    // Assert receiver cannot transfer since they don't have an NFT
-    await shallRevert(transfer("operator", "receiver", "sender"));
+    test("owner can transfer", async () => {
+      // Assert sender can transfer their NFT
+      await shallPass(transfer("operator", "sender", "receiver"));
+    });
+
+    test("non-owner can't transfer", async () => {
+      // Assert receiver cannot transfer since they don't have an NFT
+      await shallRevert(transfer("operator", "receiver", "sender"));
+    });
   });
 });
