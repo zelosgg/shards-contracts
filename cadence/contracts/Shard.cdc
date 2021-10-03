@@ -44,6 +44,9 @@ pub contract Shard: NonFungibleToken {
             self.influencerID = influencerID
             self.metadata = metadata
 
+            // Increment the ID so that it isn't used again
+            Shard.totalMoments = Shard.totalMoments + (1 as UInt32)
+
             // Broadcast the new Moment's data
             emit MomentCreated(
                 id: self.id,
