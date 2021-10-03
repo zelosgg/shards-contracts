@@ -114,6 +114,9 @@ pub contract Shard: NonFungibleToken {
             self.id = initID
             self.clipID = clipID
 
+            // Increase the total supply counter
+            Shard.totalSupply = Shard.totalSupply + (1 as UInt64)
+
             emit ShardMinted(id: self.id, clipID: self.clipID)
         }
     }
@@ -208,9 +211,6 @@ pub contract Shard: NonFungibleToken {
 
             // Deposits it in the recipient's account using their reference
             recipient.deposit(token: <-newNFT)
-
-            // Increase the total supply counter
-            Shard.totalSupply = Shard.totalSupply + (1 as UInt64)
         }
 
         pub fun batchMintNFT(
