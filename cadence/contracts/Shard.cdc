@@ -36,7 +36,11 @@ pub contract Shard: NonFungibleToken {
         pub let splits: UInt8
 
         // The metadata for a Moment
-        pub let metadata: {String: String}
+        access(self) let metadata: {String: String}
+
+        pub fun getMetadata(): {String: String} {
+            return self.metadata
+        }
 
         init(influencerID: String, splits: UInt8, metadata: {String: String}) {
             pre {
@@ -72,7 +76,11 @@ pub contract Shard: NonFungibleToken {
         pub let sequence: UInt8
 
         // Stores all the metadata about the Clip as a string mapping
-        pub let metadata: {String: String}
+        access(self) let metadata: {String: String}
+
+        pub fun getMetadata(): {String: String} {
+            return self.metadata
+        }
 
         init(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
             pre {
@@ -249,12 +257,12 @@ pub contract Shard: NonFungibleToken {
 
     // Publicly get metadata for a given Moment ID
     pub fun getMomentMetadata(momentID: UInt32): {String: String}? {
-        return self.moments[momentID]?.metadata
+        return self.moments[momentID]?.getMetadata()
     }
 
     // Publicly get metadata for a given Clip ID
     pub fun getClipMetadata(clipID: UInt32): {String: String}? {
-        return self.clips[clipID]?.metadata
+        return self.clips[clipID]?.getMetadata()
     }
 
     // Publicly get all Clips
@@ -276,16 +284,16 @@ pub contract Shard: NonFungibleToken {
 
         // Create a Collection resource and save it to storage
         let collection <- create Collection()
-        self.account.save(<-collection, to: /storage/ShardCollection)
+        self.account.save(<-collection, to: /storage/EternalShardCollection)
 
         // Create an Admin resource and save it to storage
         let admin <- create Admin()
-        self.account.save(<-admin, to: /storage/ShardAdmin)
+        self.account.save(<-admin, to: /storage/EternalShardAdmin)
 
         // Create a public capability for the collection
         self.account.link<&{NonFungibleToken.CollectionPublic}>(
-            /public/ShardCollection,
-            target: /storage/ShardCollection
+            /public/EternalShardCollection,
+            target: /storage/EternalShardCollection
         )
 
         emit ContractInitialized()
