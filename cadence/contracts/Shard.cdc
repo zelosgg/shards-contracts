@@ -36,11 +36,7 @@ pub contract Shard: NonFungibleToken {
         pub let splits: UInt8
 
         // The metadata for a Moment
-        access(self) let metadata: {String: String}
-
-        pub fun getMetadata(): {String: String} {
-            return self.metadata
-        }
+        access(contract) let metadata: {String: String}
 
         init(influencerID: String, splits: UInt8, metadata: {String: String}) {
             pre {
@@ -76,11 +72,7 @@ pub contract Shard: NonFungibleToken {
         pub let sequence: UInt8
 
         // Stores all the metadata about the Clip as a string mapping
-        access(self) let metadata: {String: String}
-
-        pub fun getMetadata(): {String: String} {
-            return self.metadata
-        }
+        access(contract) let metadata: {String: String}
 
         init(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
             pre {
@@ -257,12 +249,12 @@ pub contract Shard: NonFungibleToken {
 
     // Publicly get metadata for a given Moment ID
     pub fun getMomentMetadata(momentID: UInt32): {String: String}? {
-        return self.moments[momentID]?.getMetadata()
+        return self.moments[momentID]?.metadata
     }
 
     // Publicly get metadata for a given Clip ID
     pub fun getClipMetadata(clipID: UInt32): {String: String}? {
-        return self.clips[clipID]?.getMetadata()
+        return self.clips[clipID]?.metadata
     }
 
     // Publicly get all Clips
