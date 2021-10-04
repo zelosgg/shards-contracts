@@ -16,9 +16,9 @@ const transfer = async (operator, from, to) => {
         transaction(recipient: Address, withdrawID: UInt64) {
             prepare(acct: AuthAccount) {
                 let recipient = getAccount(recipient)
-                let collectionRef = acct.borrow<&Shard.Collection>(from: /storage/ShardCollection)
+                let collectionRef = acct.borrow<&Shard.Collection>(from: /storage/EternalShardCollection)
                     ?? panic("Could not borrow a reference to the owner's collection")
-                let depositRef = recipient.getCapability(/public/ShardCollection)
+                let depositRef = recipient.getCapability(/public/EternalShardCollection)
                     .borrow<&{NonFungibleToken.CollectionPublic}>()
                     ?? panic("Could not borrow a reference to the receiver's collection")
                 let nft <- collectionRef.withdraw(withdrawID: withdrawID)
