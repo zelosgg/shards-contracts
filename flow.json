@@ -41,7 +41,7 @@
   },
   "deployments": {
     "testnet": {
-      "testnet-account-starly": ["Shard"]
+      "testnet-account": ["Shard"]
     }
   }
 }

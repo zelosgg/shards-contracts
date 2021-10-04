@@ -1,4 +1,4 @@
-import NonFungibleToken from 0xNonFungibleToken
+import NonFungibleToken from 0x631e88ae7f1d7c20
 
 // eternal.gg
 pub contract Shard: NonFungibleToken {
