@@ -36,7 +36,7 @@ pub contract Shard: NonFungibleToken {
         pub let splits: UInt8
 
         // The metadata for a Moment
-        pub let metadata: {String: String}
+        access(contract) let metadata: {String: String}
 
         init(influencerID: String, splits: UInt8, metadata: {String: String}) {
             pre {
@@ -72,7 +72,7 @@ pub contract Shard: NonFungibleToken {
         pub let sequence: UInt8
 
         // Stores all the metadata about the Clip as a string mapping
-        pub let metadata: {String: String}
+        access(contract) let metadata: {String: String}
 
         init(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
             pre {
@@ -276,16 +276,16 @@ pub contract Shard: NonFungibleToken {
 
         // Create a Collection resource and save it to storage
         let collection <- create Collection()
-        self.account.save(<-collection, to: /storage/ShardCollection)
+        self.account.save(<-collection, to: /storage/EternalShardCollection)
 
         // Create an Admin resource and save it to storage
         let admin <- create Admin()
-        self.account.save(<-admin, to: /storage/ShardAdmin)
+        self.account.save(<-admin, to: /storage/EternalShardAdmin)
 
         // Create a public capability for the collection
         self.account.link<&{NonFungibleToken.CollectionPublic}>(
-            /public/ShardCollection,
-            target: /storage/ShardCollection
+            /public/EternalShardCollection,
+            target: /storage/EternalShardCollection
         )
 
         emit ContractInitialized()

@@ -16,14 +16,14 @@ const mintBatch = async (from, to, clipID, quantity) => {
     transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
         let minter: &Shard.Admin
         prepare(signer: AuthAccount) {
-            self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
+            self.minter = signer.borrow<&Shard.Admin>(from: /storage/EternalShardAdmin)
                 ?? panic("Could not borrow a reference to the Shard minter")
         }
         execute {
             let receiver = getAccount(recipient)
-                .getCapability(/public/ShardCollection)
+                .getCapability(/public/EternalShardCollection)
                 .borrow<&{NonFungibleToken.CollectionPublic}>()
-                ?? panic("Could not get receiver reference to the Shard Collection")
+                ?? panic("Could not get receiver reference to the Shard collection")
             self.minter.batchMintNFT(recipient: receiver, clipID: clipID, quantity: quantity)
         }
     }
