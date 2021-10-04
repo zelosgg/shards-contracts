@@ -2,11 +2,12 @@ import { useState } from "react";
 import { FlowService } from "./FlowService";
 import * as fcl from "@onflow/fcl";
 import * as types from "@onflow/types";
+import env from "react-dotenv";
 
 import { clips, moments } from "./shards";
 
-const Shard = "0x4fcbf393977f9976";
-const NonFungibleToken = "0x631e88ae7f1d7c20";
+const Shard = env.FLOW_SHARD_ADDRESS;
+const NonFungibleToken = env.FLOW_NFT_ADDRESS;
 fcl
   .config()
   .put("accessNode.api", "https://access-testnet.onflow.org")
@@ -15,13 +16,14 @@ fcl
 
 function App() {
   const service = new FlowService(
-    "4fcbf393977f9976",
-    "0ee5f8cd60227c75e0148c8039121c997efa18177f9a69dbec4f3b8a8abb9b6b",
-    "0"
+    env.FLOW_ACCOUNT_ADDRESS,
+    env.FLOW_ACCOUNT_PRIVATE_KEY,
+    0
   );
   const [sending, setSending] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [responses, setResponses] = useState<any[]>([]);
+  const [csv, setCsv] = useState("");
 
   async function resetContract() {
     setResetting(true);
@@ -32,8 +34,8 @@ function App() {
 import NonFungibleToken from ${NonFungibleToken}
 transaction() {
     prepare(account: AuthAccount) {
-        destroy <- account.load<@AnyResource>(from:/storage/ShardCollection)
-        destroy <- account.load<@AnyResource>(from:/storage/ShardAdmin)
+        destroy <- account.load<@AnyResource>(from:/storage/EternalShardCollection)
+        destroy <- account.load<@AnyResource>(from:/storage/EternalShardAdmin)
     }
 }
         `,
@@ -59,14 +61,14 @@ import NonFungibleToken from ${NonFungibleToken}
 import Shard from ${Shard}
 transaction {
     prepare(acct: AuthAccount) {
-        if acct.borrow<&Shard.Collection>(from: /storage/ShardCollection) != nil {
+        if acct.borrow<&Shard.Collection>(from: /storage/EternalShardCollection) != nil {
             return
         }
         let collection <- Shard.createEmptyCollection()
-        acct.save(<-collection, to: /storage/ShardCollection)
+        acct.save(<-collection, to: /storage/EternalShardCollection)
         acct.link<&{NonFungibleToken.CollectionPublic}>(
-            /public/ShardCollection,
-            target: /storage/ShardCollection
+            /public/EternalShardCollection,
+            target: /storage/EternalShardCollection
         )
     }
 }
@@ -93,7 +95,7 @@ import Shard from ${Shard}
 transaction(influencerID: String, splits: UInt8, metadata: {String: String}) {
     let minter: &Shard.Admin
     prepare(signer: AuthAccount) {
-        self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
+        self.minter = signer.borrow<&Shard.Admin>(from: /storage/EternalShardAdmin)
             ?? panic("Could not borrow a reference to the Shard minter")
     }
     execute {
@@ -142,7 +144,7 @@ import Shard from ${Shard}
 transaction(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
     let minter: &Shard.Admin
     prepare(signer: AuthAccount) {
-        self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
+        self.minter = signer.borrow<&Shard.Admin>(from: /storage/EternalShardAdmin)
             ?? panic("Could not borrow a reference to the Shard minter")
     }
     execute {
@@ -185,12 +187,12 @@ import Shard from ${Shard}
 transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
     let minter: &Shard.Admin
     prepare(signer: AuthAccount) {
-        self.minter = signer.borrow<&Shard.Admin>(from: /storage/ShardAdmin)
+        self.minter = signer.borrow<&Shard.Admin>(from: /storage/EternalShardAdmin)
             ?? panic("Could not borrow a reference to the Shard minter")
     }
     execute {
         let receiver = getAccount(recipient)
-            .getCapability(/public/ShardCollection)
+            .getCapability(/public/EternalShardCollection)
             .borrow<&{NonFungibleToken.CollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
         self.minter.batchMintNFT(recipient: receiver, clipID: clipID, quantity: quantity)
@@ -214,6 +216,27 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
     ]);
   }
 
+  async function getShardData() {
+    setSending(true);
+    const response = await fcl.send([
+      fcl.script`
+import NonFungibleToken from ${NonFungibleToken}
+import Shard from ${Shard}
+pub fun main(): [UInt64] {
+    let nftOwner = getAccount(0x${env.FLOW_ACCOUNT_ADDRESS})
+    let capability = nftOwner.getCapability<&Shard.Collection>(/public/EternalShardCollection)
+    let receiverRef = capability.borrow()
+        ?? panic("Could not borrow receiver reference")
+    return receiverRef.getIDs()
+}
+      `,
+    ]);
+    const data = await fcl.decode(response);
+    console.log(csv);
+    setCsv((csv) => csv + String(data) + "\n");
+    setSending(false);
+  }
+
   async function sendTransaction() {
     setSending(true);
     await initializeStorage();
@@ -224,10 +247,13 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
   return (
     <div className="App">
       <button onClick={sendTransaction} disabled={sending}>
-        {sending ? "Creating" : "Create Everything"}
+        Create Everything
       </button>
       <button onClick={resetContract} disabled={resetting}>
-        {resetting ? "Resetting" : "Reset Contract"}
+        Reset Contract
+      </button>
+      <button onClick={getShardData} disabled={sending}>
+        Retrieve all data
       </button>
       <ul>
         {responses.map((key, index) => (
@@ -247,6 +273,7 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
           </li>
         ))}
       </ul>
+      {csv !== "" && <textarea value={csv}></textarea>}
     </div>
   );
 }
