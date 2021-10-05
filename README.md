@@ -47,11 +47,11 @@ flow project deploy --network testnet
 - Create `.env` file with the following contents, replacing your testnet account address, keys, and the Shard address from the previous step
 
 ```bash
-FLOW_ACCOUNT_ADDRESS=4fcbf393977f9976
-FLOW_ACCOUNT_PRIVATE_KEY=0ee5f8cd60227c75e0148c8039121c997efa18177f9a69dbec4f3b8a8abb9b6b
-FLOW_NFT_ADDRESS=0x631e88ae7f1d7c20
-FLOW_SHARD_ADDRESS=0x4fcbf393977f9976
 SKIP_PREFLIGHT_CHECK=true
+REACT_APP_FLOW_ACCOUNT_ADDRESS=4fcbf393977f9976
+REACT_APP_FLOW_ACCOUNT_PRIVATE_KEY=0ee5f8cd60227c75e0148c8039121c997efa18177f9a69dbec4f3b8a8abb9b6b
+REACT_APP_FLOW_NFT_ADDRESS=0x631e88ae7f1d7c20
+REACT_APP_FLOW_SHARD_ADDRESS=0x4fcbf393977f9976
 ```
 
 - Run the web app
