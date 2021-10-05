@@ -134,7 +134,7 @@ pub contract Shard: NonFungibleToken {
         }
     }
 
-    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection: ShardCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
         // A resource type with an `UInt64` ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
@@ -223,7 +223,7 @@ pub contract Shard: NonFungibleToken {
 
         // Mints a new NFT with a new ID
         pub fun mintNFT(
-            recipient: &{NonFungibleToken.CollectionPublic},
+            recipient: &{Shard.ShardCollectionPublic},
             clipID: UInt32
         ) {
             // Creates a new NFT with provided arguments
@@ -237,7 +237,7 @@ pub contract Shard: NonFungibleToken {
         }
 
         pub fun batchMintNFT(
-            recipient: &{NonFungibleToken.CollectionPublic},
+            recipient: &{Shard.ShardCollectionPublic},
             clipID: UInt32,
             quantity: UInt64
 
@@ -256,7 +256,7 @@ pub contract Shard: NonFungibleToken {
     }
 
     // Public function that anyone can call to create a new empty collection
-    pub fun createEmptyCollection(): @NonFungibleToken.Collection {
+    pub fun createEmptyCollection(): @Shard.Collection {
         return <- create Collection()
     }
 
@@ -298,12 +298,10 @@ pub contract Shard: NonFungibleToken {
         self.clips = {}
 
         // Create a Collection resource and save it to storage
-        let collection <- create Collection()
-        self.account.save(<-collection, to: /storage/EternalShardCollection)
+        self.account.save(<-create Collection(), to: /storage/EternalShardCollection)
 
         // Create an Admin resource and save it to storage
-        let admin <- create Admin()
-        self.account.save(<-admin, to: /storage/EternalShardAdmin)
+        self.account.save(<- create Admin(), to: /storage/EternalShardAdmin)
 
         // Create a public capability for the collection
         self.account.link<&{Shard.ShardCollectionPublic}>(

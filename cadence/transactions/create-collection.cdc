@@ -11,7 +11,7 @@ transaction {
         }
         let collection <- Shard.createEmptyCollection()
         acct.save(<-collection, to: /storage/EternalShardCollection)
-        acct.link<&{NonFungibleToken.CollectionPublic}>(
+        acct.link<&{Shard.ShardCollectionPublic}>(
             /public/EternalShardCollection,
             target: /storage/EternalShardCollection
         )

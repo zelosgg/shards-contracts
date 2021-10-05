@@ -22,7 +22,7 @@ const mintBatch = async (from, to, clipID, quantity) => {
         execute {
             let receiver = getAccount(recipient)
                 .getCapability(/public/EternalShardCollection)
-                .borrow<&{NonFungibleToken.CollectionPublic}>()
+                .borrow<&{Shard.ShardCollectionPublic}>()
                 ?? panic("Could not get receiver reference to the Shard collection")
             self.minter.batchMintNFT(recipient: receiver, clipID: clipID, quantity: quantity)
         }

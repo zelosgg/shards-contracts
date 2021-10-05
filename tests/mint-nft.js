@@ -22,7 +22,7 @@ const mint = async (from, to, clipID) => {
         execute {
             let receiver = getAccount(recipient)
                 .getCapability(/public/EternalShardCollection)
-                .borrow<&{NonFungibleToken.CollectionPublic}>()
+                .borrow<&{Shard.ShardCollectionPublic}>()
                 ?? panic("Could not get receiver reference to the Shard Collection")
             self.minter.mintNFT(recipient: receiver, clipID: clipID)
         }

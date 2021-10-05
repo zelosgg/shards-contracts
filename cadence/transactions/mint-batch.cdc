@@ -13,7 +13,7 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
     execute {
         let receiver = getAccount(recipient)
             .getCapability(/public/EternalShardCollection)
-            .borrow<&{NonFungibleToken.CollectionPublic}>()
+            .borrow<&{Shard.ShardCollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
         self.minter.batchMintNFT(recipient: receiver, clipID: clipID, quantity: quantity)
     }

@@ -10,7 +10,7 @@ transaction(recipient: Address, withdrawID: UInt64) {
         let collectionRef = acct.borrow<&Shard.Collection>(from: /storage/EternalShardCollection)
             ?? panic("Could not borrow a reference to the owner's collection")
         let depositRef = recipient.getCapability(/public/EternalShardCollection)
-            .borrow<&{NonFungibleToken.CollectionPublic}>()
+            .borrow<&{Shard.ShardCollectionPublic}>()
             ?? panic("Could not borrow a reference to the receiver's collection")
         let nft <- collectionRef.withdraw(withdrawID: withdrawID)
         depositRef.deposit(token: <-nft)
