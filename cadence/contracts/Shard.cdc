@@ -160,6 +160,16 @@ pub contract Shard: NonFungibleToken {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
+        // Gets a reference to the Shard NFT for metadata and such
+        pub fun borrowShardNFT(id: UInt64): &Shard.NFT? {
+            if self.ownedNFTs[id] != nil {
+                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                return ref as! &Shard.NFT
+            } else {
+                return nil
+            }
+        }
+
         destroy() {
             destroy self.ownedNFTs
         }
