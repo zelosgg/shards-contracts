@@ -99,6 +99,19 @@ pub contract Shard: NonFungibleToken {
         }
     }
 
+    // Add your own Collection interface so you can use it later
+    pub resource interface ShardCollectionPublic {
+        pub fun deposit(token: @NonFungibleToken.NFT)
+        pub fun getIDs(): [UInt64]
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
+        pub fun borrowShardNFT(id: UInt64): &Shard.NFT? {
+            post {
+                (result == nil) || (result?.id == id):
+                    "Cannot borrow Shard reference: The ID of the returned reference is incorrect"
+            }
+        }
+    }
+
     pub resource NFT: NonFungibleToken.INFT {
         // Identifier of NFT
         pub let id: UInt64
