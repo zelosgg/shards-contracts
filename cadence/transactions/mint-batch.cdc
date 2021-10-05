@@ -1,4 +1,3 @@
-import NonFungibleToken from 0xNonFungibleToken
 import Shard from 0xShard
 
 // This script uses the Shard.Admin resource to mint a batch of new NFTs

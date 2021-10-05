@@ -6,12 +6,10 @@ import {
 
 const transfer = async (operator, from, to) => {
   // Get the contract addresses
-  const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
 
   // The Cadence transaction code
   const code = `
-        import NonFungibleToken from ${NonFungibleToken}
         import Shard from ${Shard}
         transaction(recipient: Address, withdrawID: UInt64) {
             prepare(acct: AuthAccount) {

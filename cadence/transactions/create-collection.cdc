@@ -1,4 +1,3 @@
-import NonFungibleToken from 0xNonFungibleToken
 import Shard from 0xShard
 
 // This transaction is what an account would run

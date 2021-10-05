@@ -1,4 +1,3 @@
-import NonFungibleToken from 0xNonFungibleToken
 import Shard from 0xShard
 
 // This script uses the NFTMinter resource to mint a new NFT

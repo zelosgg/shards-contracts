@@ -6,12 +6,10 @@ import {
 
 const mintBatch = async (from, to, clipID, quantity) => {
   // Get the contract addresses
-  const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
 
   // The Cadence transaction code
   const code = `
-    import NonFungibleToken from ${NonFungibleToken}
     import Shard from ${Shard}
     transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
         let minter: &Shard.Admin

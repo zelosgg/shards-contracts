@@ -7,12 +7,10 @@ import {
 // Initializes a new storage space for users to receive NFTs
 const createCollection = async (...signers) => {
   // Get the contract addresses
-  const NonFungibleToken = await getContractAddress("NonFungibleToken");
   const Shard = await getContractAddress("Shard");
 
   // The Cadence transaction code
   const code = `
-    import NonFungibleToken from ${NonFungibleToken}
     import Shard from ${Shard}
     transaction {
         prepare(acct: AuthAccount) {
