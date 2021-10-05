@@ -2,12 +2,11 @@ import { useState } from "react";
 import { FlowService } from "./FlowService";
 import * as fcl from "@onflow/fcl";
 import * as types from "@onflow/types";
-import env from "react-dotenv";
 
 import { clips, moments } from "./shards";
 
-const Shard = env.FLOW_SHARD_ADDRESS;
-const NonFungibleToken = env.FLOW_NFT_ADDRESS;
+const Shard = process.env.REACT_APP_FLOW_SHARD_ADDRESS;
+const NonFungibleToken = process.env.REACT_APP_FLOW_NFT_ADDRESS;
 fcl
   .config()
   .put("accessNode.api", "https://access-testnet.onflow.org")
@@ -16,8 +15,8 @@ fcl
 
 function App() {
   const service = new FlowService(
-    env.FLOW_ACCOUNT_ADDRESS,
-    env.FLOW_ACCOUNT_PRIVATE_KEY,
+    process.env.REACT_APP_FLOW_ACCOUNT_ADDRESS!,
+    process.env.REACT_APP_FLOW_ACCOUNT_PRIVATE_KEY!,
     0
   );
   const [sending, setSending] = useState(false);
@@ -66,7 +65,7 @@ transaction {
         }
         let collection <- Shard.createEmptyCollection()
         acct.save(<-collection, to: /storage/EternalShardCollection)
-        acct.link<&{NonFungibleToken.CollectionPublic}>(
+        acct.link<&{Shard.ShardCollectionPublic}>(
             /public/EternalShardCollection,
             target: /storage/EternalShardCollection
         )
@@ -193,7 +192,7 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
     execute {
         let receiver = getAccount(recipient)
             .getCapability(/public/EternalShardCollection)
-            .borrow<&{NonFungibleToken.CollectionPublic}>()
+            .borrow<&{Shard.ShardCollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
         self.minter.batchMintNFT(recipient: receiver, clipID: clipID, quantity: quantity)
     }
@@ -222,18 +221,41 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
       fcl.script`
 import NonFungibleToken from ${NonFungibleToken}
 import Shard from ${Shard}
-pub fun main(): [UInt64] {
-    let nftOwner = getAccount(0x${env.FLOW_ACCOUNT_ADDRESS})
-    let capability = nftOwner.getCapability<&Shard.Collection>(/public/EternalShardCollection)
-    let receiverRef = capability.borrow()
-        ?? panic("Could not borrow receiver reference")
-    return receiverRef.getIDs()
+pub fun main(): [AnyStruct] {
+    let owner = getAccount(0x${process.env.REACT_APP_FLOW_ACCOUNT_ADDRESS})
+        .getCapability(/public/EternalShardCollection)
+        .borrow<&{Shard.ShardCollectionPublic}>()
+            ?? panic("Could not get receiver reference to the Shard Collection")
+    let allTokens: [AnyStruct] = []
+    let ids = owner.getIDs()
+    for id in ids {
+        let tokenData: [AnyStruct] = []
+        let nft = owner.borrowShardNFT(id: id)!
+        let clip = Shard.getClip(clipID: nft.clipID)!
+        let clipMetadata = Shard.getClipMetadata(clipID: clip.id)!
+        let moment = Shard.getMoment(momentID: clip.momentID)!
+        let momentMetadata = Shard.getMomentMetadata(momentID: moment.id)!
+        tokenData.append(id)
+        tokenData.append(owner.borrowNFT(id: id).uuid)
+        for cd in clipMetadata.values {
+            tokenData.append(cd)
+        }
+        for md in momentMetadata.values {
+            tokenData.append(momentMetadata.values)
+        }
+        allTokens.append(tokenData)
+    }
+    return allTokens
 }
       `,
     ]);
-    const data = await fcl.decode(response);
-    console.log(csv);
-    setCsv((csv) => csv + String(data) + "\n");
+    const allTokens = await fcl.decode(response);
+    console.log(allTokens);
+    console.log(allTokens.length);
+    for (const token in allTokens) {
+      setCsv((csv) => csv + allTokens[token] + "\n");
+    }
+
     setSending(false);
   }
 
@@ -249,7 +271,7 @@ pub fun main(): [UInt64] {
       <button onClick={sendTransaction} disabled={sending}>
         Create Everything
       </button>
-      <button onClick={resetContract} disabled={resetting}>
+      <button onClick={resetContract} disabled={resetting || sending}>
         Reset Contract
       </button>
       <button onClick={getShardData} disabled={sending}>
@@ -273,7 +295,7 @@ pub fun main(): [UInt64] {
           </li>
         ))}
       </ul>
-      {csv !== "" && <textarea value={csv}></textarea>}
+      {csv !== "" && <textarea value={csv} readOnly></textarea>}
     </div>
   );
 }
