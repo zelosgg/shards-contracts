@@ -306,7 +306,7 @@ pub contract Shard: NonFungibleToken {
         self.account.save(<-admin, to: /storage/EternalShardAdmin)
 
         // Create a public capability for the collection
-        self.account.link<&{NonFungibleToken.CollectionPublic}>(
+        self.account.link<&{Shard.ShardCollectionPublic}>(
             /public/EternalShardCollection,
             target: /storage/EternalShardCollection
         )
