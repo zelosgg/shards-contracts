@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FlowService } from "./FlowService";
 import * as fcl from "@onflow/fcl";
 import * as types from "@onflow/types";
+import { saveAs } from "file-saver";
 
 import { clips, moments, splits } from "./shards";
 
@@ -220,15 +221,16 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
 
   async function getShardData() {
     setSending(true);
-    // ,,,,,,,,,,,
-    // ,id,resourceId,title,description,uri,rarity,edition,editions,image,video_mp4,video_webm
-    // ,${id},${uuid},${title},${description},https://eternal.gg/shards/${id}/,,,,,${video_url},
-    setCsv((csv) => csv + ",,,,,,,,,,,\n");
     setCsv(
       (csv) =>
         csv +
-        ",id,resourceId,title,description,uri,rarity,edition,editions,image,video_mp4,video_webm\n"
+        "Getting all metadata from the blockchain... This could take a while" +
+        "\n"
     );
+    var csv = "";
+    csv += ",,,,,,,,,,,\n";
+    csv +=
+      ",id,resourceId,title,description,uri,rarity,edition,editions,image,video_mp4,video_webm\n";
     const description =
       "Peer into the shard to see a moment in streaming history. Each Eternal shard is a third of a moment we've immortalized on the blockchain. Collect or pool three shards together to form an Eternal crystal that can be used to enhance a moment in a pack, dropping on October 22. The purer the shard, the higher chance for a rarer moment. All shards and crystals are tradeable at Eternal.gg ";
     const idRequest = await fcl.send([
@@ -246,7 +248,6 @@ pub fun main(): [UInt64] {
       `,
     ]);
     const ids = await fcl.decode(idRequest);
-    console.log(ids);
     for (const id in ids) {
       const response = await fcl.send([
         fcl.script`
@@ -279,22 +280,21 @@ pub fun main(id: UInt64): TokenData {
       `,
         fcl.args([fcl.arg(parseInt(id), types.UInt64)]),
       ]);
-
       const token = await fcl.decode(response);
-      console.log(token);
-      if (parseInt(id) > 50) return;
-      setCsv(
-        (csv) =>
-          csv +
-          `,${token.id},${token.uuid},${
-            token.moment.metadata.title +
-            `(${parseInt(token.clip.sequence) + 1}/${token.moment.splits})`
-          },${description},https://eternal.gg/shards/${token.id}/,,,,,${
-            token.clip.metadata.video_url
-          },` +
-          "\n"
-      );
+      csv +=
+        `,${token.id},${token.uuid},${
+          token.moment.metadata.title +
+          `(${parseInt(token.clip.sequence) + 1}/${token.moment.splits})`
+        },${description},https://eternal.gg/shards/${token.id},,,,,${
+          token.clip.metadata.video_url
+        },` + "\n";
+      if (parseInt(id) % 100 == 0) setCsv(`${id}/${ids.length}`);
     }
+    const blob = new Blob([csv], {
+      type: "application/csv;charset=UTF-8",
+    });
+    saveAs(blob, "shards.csv");
+    setCsv("Done. Saving");
     setSending(false);
   }
 
@@ -360,7 +360,7 @@ pub fun main(): Int {
           </li>
         ))}
       </ul>
-      {csv !== "" && <textarea value={csv} readOnly></textarea>}
+      {csv !== "" && <p>{csv}</p>}
     </div>
   );
 }

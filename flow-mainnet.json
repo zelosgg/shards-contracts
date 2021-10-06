@@ -3,13 +3,18 @@
     "NonFungibleToken": {
       "source": "./cadence/contracts/NonFungibleToken.cdc",
       "aliases": {
-        "mainnet": "0x1d7e57aa55817448",
+        "mainnet": "0x1d7e57aa55817448"
       }
     },
-    "Shard": "./cadence/contracts/Shard.cdc"
+    "Shard": {
+      "source": "./cadence/contracts/Shard.cdc",
+      "aliases": {
+        "mainnet": "0x82b54037a8f180cf"
+      }
+    }
   },
   "networks": {
-    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000"
   },
   "accounts": {
     "admin-account": {
