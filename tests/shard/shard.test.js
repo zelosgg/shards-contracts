@@ -1,13 +1,13 @@
 import path from "path";
 import { init, emulator, shallPass, shallRevert } from "flow-js-testing";
 import fund from "../fund-accounts";
-import mint from "../mint-nft";
-import mintBatch from "../mint-batch-nft";
-import createCollection from "../create-collection";
 import deploy from "../deploy-contracts";
-import transfer from "../transfer-nft";
-import createClip from "../create-clip";
-import createMoment from "../create-moment";
+import mint from "./mint-nft";
+import mintBatch from "./mint-batch-nft";
+import createCollection from "./create-collection";
+import transfer from "./transfer-nft";
+import createClip from "./create-clip";
+import createMoment from "./create-moment";
 
 // We need to set timeout for a higher number, because some transactions might take up some time
 jest.setTimeout(10000);
@@ -56,7 +56,7 @@ describe("shard", () => {
       // Assert that operator can create new Clips
       await shallRevert(createMoment("operator", undefined, undefined, ""));
     });
-  })
+  });
 
   describe("clips", () => {
     beforeEach(async () => {
@@ -68,7 +68,7 @@ describe("shard", () => {
 
     test("operator can create new clip", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Assert that operator can create new Clips
@@ -77,7 +77,7 @@ describe("shard", () => {
 
     test("non-operator can't create new clip", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Assert that non-operator can't create new Clips
@@ -86,7 +86,7 @@ describe("shard", () => {
 
     test("clip metadata cannot be empty", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Assert that non-operator can't create new Clips
@@ -95,24 +95,26 @@ describe("shard", () => {
 
     test("new clip must have valid moment ID", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Assert that operator can create new Clips
-      await shallRevert(createClip("operator", momentID + 1, splitLimit - 1, ""));
+      await shallRevert(
+        createClip("operator", momentID + 1, splitLimit - 1, "")
+      );
     });
 
     test("new clip must be within moment's split limit", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Assert that it can be inside of the limit
       await shallPass(createClip("operator", momentID, splitLimit - 1));
       // // Assert that it cannot be outside of the limit
       await shallRevert(createClip("operator", momentID, splitLimit));
-    })
-  })
+    });
+  });
 
   describe("minting", () => {
     beforeEach(async () => {
@@ -126,7 +128,7 @@ describe("shard", () => {
 
     test("operator can mint", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
@@ -138,7 +140,7 @@ describe("shard", () => {
 
     test("non-operator cannot mint", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
@@ -150,7 +152,7 @@ describe("shard", () => {
 
     test("batch minting", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
@@ -162,7 +164,7 @@ describe("shard", () => {
 
     test("new mints must have valid clip ID", async () => {
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
@@ -182,7 +184,7 @@ describe("shard", () => {
       // Create collections for all involved accounts
       await createCollection("operator", "sender", "receiver");
       // Create a new Moment
-      const splitLimit = Math.floor(Math.random() * 255)
+      const splitLimit = Math.floor(Math.random() * 255);
       const moment = await createMoment("operator", undefined, splitLimit);
       const momentID = moment.events[0].data.id;
       // Create a new clip and get it's ID
