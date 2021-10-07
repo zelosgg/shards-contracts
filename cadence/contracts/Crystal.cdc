@@ -154,14 +154,19 @@ pub contract Crystal: NonFungibleToken {
             shards.length > 0: "No Shards supplied"
         }
 
+        let uniques: [&Shard.NFT] = []
         let initialSplits = Crystal.getShardSplits(shard: shards[0])
         for shard in shards {
             let splits = Crystal.getShardSplits(shard: shard)
             // 1. Make sure the sequence of each Shard matches
             // 2. Make sure there are enough Shards to merge
-            if splits != initialSplits || UInt8(shards.length) != splits {
+            // 3. Make sure there are no duplicates
+            if splits != initialSplits || UInt8(shards.length) != splits || uniques.contains(shard) {
                 return false
             }
+
+            // Append the Shard to the unique array
+            uniques.append(shard)
         }
 
         // If the for loop exited without returning, all sequence lengths match

@@ -35,8 +35,8 @@ describe("crystal", () => {
   });
 
   describe("merging", () => {
-    // Define a split moment once upon all tests
-    const splitLimit = Math.floor(Math.random() * 255);
+    // Define a split between 2-20 to use among all tests
+    const splitLimit = Math.floor(Math.random() * 18) + 2;
 
     beforeEach(async () => {
       // Fund all involved accounts
