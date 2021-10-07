@@ -110,6 +110,7 @@ transaction(influencerID: String, splits: UInt8, metadata: {String: String}) {
             [
               { key: "title", value: moment.title },
               { key: "game", value: moment.game },
+              { key: "creator", value: moment.creator },
             ],
             types.Dictionary({ key: types.String, value: types.String })
           ),
@@ -282,10 +283,11 @@ pub fun main(id: UInt64): TokenData {
       ]);
       const token = await fcl.decode(response);
       csv +=
-        `,${token.id},${token.uuid},${
-          token.moment.metadata.title +
-          `(${parseInt(token.clip.sequence) + 1}/${token.moment.splits})`
-        },${description},https://eternal.gg/shards/${token.id},,,,,${
+        `,${token.id},${token.uuid},${token.moment.metadata.title} - ${
+          token.moment.metadata.creator
+        } ${`(${parseInt(token.clip.sequence) + 1}/${
+          token.moment.splits
+        })`},${description},https://eternal.gg/shards/${token.id},,,,,${
           token.clip.metadata.video_url
         },` + "\n";
       if (parseInt(id) % 100 == 0) setCsv(`${id}/${ids.length}`);
