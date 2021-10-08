@@ -134,6 +134,8 @@ transaction(influencerID: String, splits: UInt8, metadata: {String: String}) {
     }
   }
 
+  var totalClips = 0;
+
   async function createClip(momentId: number, clip: any) {
     const sequence: number = parseInt(clip.sequence);
     const authorization = service.authz();
@@ -179,9 +181,13 @@ transaction(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
     ]);
     const clipId = transaction.events[0].data.id;
     await batchMint(clipId, 134);
+    totalClips += 134;
   }
 
   async function batchMint(clipId: number, amount: number) {
+    if (totalClips + amount > 6000) {
+      amount = 6000 - totalClips;
+    }
     const authorization = service.authz();
     // Create moment
     var response = await fcl.send([
@@ -249,7 +255,9 @@ pub fun main(): [UInt64] {
       `,
     ]);
     const ids = await fcl.decode(idRequest);
-    for (const id in ids) {
+    console.log(ids);
+    for (const index in ids) {
+      const id = ids[index];
       const response = await fcl.send([
         fcl.script`
 import NonFungibleToken from ${NonFungibleToken}
@@ -290,7 +298,7 @@ pub fun main(id: UInt64): TokenData {
         })`},${description},https://eternal.gg/shards/${token.id},,,,,${
           token.clip.metadata.video_url
         },` + "\n";
-      if (parseInt(id) % 100 == 0) setCsv(`${id}/${ids.length}`);
+      if (parseInt(index) % 100 == 0) setCsv(`${index}/${ids.length}`);
     }
     const blob = new Blob([csv], {
       type: "application/csv;charset=UTF-8",
@@ -326,7 +334,7 @@ pub fun main(): Int {
   async function sendTransaction() {
     setSending(true);
     // Only if minting to the same account
-    await initializeStorage();
+    // await initializeStorage();
     await createMoments();
     setSending(false);
   }
@@ -352,7 +360,7 @@ pub fun main(): Int {
             <a
               href={
                 responses[index] !== undefined
-                  ? `https://testnet.flowscan.org/transaction/${
+                  ? `https://flowscan.org/transaction/${
                       (responses[index] as any).response.transactionId
                     }`
                   : ""
