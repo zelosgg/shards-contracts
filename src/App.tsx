@@ -78,7 +78,7 @@ transaction {
       fcl.authorizations([authorization]),
       fcl.limit(9999),
     ]);
-    const transaction = await fcl.tx(response).onceSealed();
+    await fcl.tx(response).onceSealed();
     setResponses((responses) => [
       ...responses,
       { title: "Initialized Storage: ", response: response },
@@ -178,7 +178,7 @@ transaction(momentID: UInt32, sequence: UInt8, metadata: {String: String}) {
       },
     ]);
     const clipId = transaction.events[0].data.id;
-    await batchMint(clipId, 300);
+    await batchMint(clipId, 134);
   }
 
   async function batchMint(clipId: number, amount: number) {
@@ -204,7 +204,7 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
 }
         `,
       fcl.args([
-        fcl.arg("0x" + ((await authorization()) as any).addr, types.Address),
+        fcl.arg(process.env.REACT_APP_SHARD_RECEIVER, types.Address),
         fcl.arg(clipId, types.UInt32),
         fcl.arg(amount, types.UInt64),
       ]),
@@ -239,7 +239,7 @@ transaction(recipient: Address, clipID: UInt32, quantity: UInt64) {
 import NonFungibleToken from ${NonFungibleToken}
 import Shard from ${Shard}
 pub fun main(): [UInt64] {
-    let owner = getAccount(0x${process.env.REACT_APP_FLOW_ACCOUNT_ADDRESS})
+    let owner = getAccount(${process.env.REACT_APP_SHARD_RECEIVER})
         .getCapability(/public/EternalShardCollection)
         .borrow<&{Shard.ShardCollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
@@ -267,7 +267,7 @@ pub struct TokenData{
     }
 }
 pub fun main(id: UInt64): TokenData {
-    let owner = getAccount(0x${process.env.REACT_APP_FLOW_ACCOUNT_ADDRESS})
+    let owner = getAccount(${process.env.REACT_APP_SHARD_RECEIVER})
         .getCapability(/public/EternalShardCollection)
         .borrow<&{Shard.ShardCollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
@@ -306,7 +306,7 @@ pub fun main(id: UInt64): TokenData {
       fcl.script`
 import Shard from ${Shard}
 pub fun main(): Int {
-    let owner = getAccount(0x${process.env.REACT_APP_FLOW_ACCOUNT_ADDRESS})
+    let owner = getAccount(${process.env.REACT_APP_SHARD_RECEIVER})
         .getCapability(/public/EternalShardCollection)
         .borrow<&{Shard.ShardCollectionPublic}>()
             ?? panic("Could not get receiver reference to the Shard Collection")
@@ -325,6 +325,7 @@ pub fun main(): Int {
 
   async function sendTransaction() {
     setSending(true);
+    // Only if minting to the same account
     await initializeStorage();
     await createMoments();
     setSending(false);
