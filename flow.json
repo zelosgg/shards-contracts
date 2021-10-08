@@ -30,16 +30,15 @@
       "address": "f8d6e0586b0a20c7",
       "key": "1e400650dfdcb8d34de32804351e55561acfa2152d5a8ff8aa423edc0ad1d984"
     },
-    "testnet-account-starly": {
-      "address": "462b4dac28de23f3",
-      "key": "f9ce3f9b5f63ce5844057adac4ca468aadf0288272499acb3c6ee13f91243b7c"
-    },
     "testnet-account": {
-      "address": "7ff5f9ac593c3ee0",
-      "key": "a059c1240f465f6d451c47350546410f485595a03a439e64be03dfc59ced3a6f"
+      "address": "51ee2535dca981e7",
+      "key": "3e52144e438bdbc33488af8a05aadb1c647e8a14f11e3e0a23b241ee8852aa07"
     }
   },
   "deployments": {
+    "emulator": {
+      "emulator-account": ["NonFungibleToken", "Shard"]
+    },
     "testnet": {
       "testnet-account": ["Shard"]
     }
