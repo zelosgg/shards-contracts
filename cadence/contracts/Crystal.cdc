@@ -10,7 +10,7 @@ pub contract Crystal: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event CrystalMinted(id: UInt64)
+    pub event CrystalMinted(id: UInt64, purity: UInt16)
 
     // Interface for a Collection
     pub resource interface CrystalCollectionPublic {
@@ -30,23 +30,33 @@ pub contract Crystal: NonFungibleToken {
         // Identifier of NFT
         pub let id: UInt64
 
-        init(initID: UInt64) {
+        // Purity of the Crystal
+        pub let purity: UInt16
+
+        init(initID: UInt64, purity: UInt16) {
             self.id = initID
+            self.purity = purity
 
             // Increase the total supply counter
             Crystal.totalSupply = Crystal.totalSupply + (1 as UInt64)
 
-            emit CrystalMinted(id: self.id)
+            emit CrystalMinted(id: self.id, purity: self.purity)
         }
     }
 
-    pub resource Collection: CrystalCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection:
+        CrystalCollectionPublic,
+        NonFungibleToken.Provider,
+        NonFungibleToken.Receiver,
+        NonFungibleToken.CollectionPublic
+    {
         // A resource type with an `UInt64` ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
         // Removes an NFT from the collection and moves it to the caller
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
-            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
+            let token <- self.ownedNFTs.remove(key: withdrawID)
+                ?? panic("The Crystal NFT does not exist")
 
             emit Withdraw(id: token.id, from: self.owner?.address)
             return <-token
@@ -98,11 +108,12 @@ pub contract Crystal: NonFungibleToken {
         // Mints a new NFT with a new ID
         pub fun mintNFT(
             recipient: &{Crystal.CrystalCollectionPublic},
-            clipID: UInt32
+            purity: UInt16
         ) {
             // Creates a new NFT with provided arguments
             var newNFT <- create NFT(
-                initID: Crystal.totalSupply
+                initID: Crystal.totalSupply,
+                purity: purity
             )
 
             // Deposits it in the recipient's account using their reference
@@ -161,7 +172,10 @@ pub contract Crystal: NonFungibleToken {
             // 1. Make sure the sequence of each Shard matches
             // 2. Make sure there are enough Shards to merge
             // 3. Make sure there are no duplicates
-            if splits != initialSplits || UInt8(shards.length) != splits || uniques.contains(shard) {
+            if splits != initialSplits
+                || UInt8(shards.length) != splits
+                || uniques.contains(shard)
+            {
                 return false
             }
 
@@ -173,14 +187,69 @@ pub contract Crystal: NonFungibleToken {
         return true
     }
 
-    // Merge multiple Shard NFTs to receive a Crystal NFT
-    pub fun merge(shards: [&Shard.NFT]): @Crystal.NFT? {
+    pub fun getPurity(shards: [&Shard.NFT]): UInt16 {
         pre {
             // Make sure the sequence of each Shard matches
             Crystal.checkCanMerge(shards: shards): "Shards must all have the same sequence length"
         }
 
-        return nil
+        var purity: UInt16 = 0
+        var uniqueSequences: [UInt8] = []
+
+        // Add the unique sequence for the first Shard
+        uniqueSequences.append(Shard.getClip(clipID: shards[0].clipID)!.sequence)
+
+        while shards.length > 0 {
+            // Remove the Shard and save it for comparison
+            let shard = shards.removeFirst()
+            let clip = Shard.getClip(clipID: shard.clipID)!
+            let moment = Shard.getMoment(momentID: clip.momentID)!
+
+            // Iterate over the array once again for comparison
+            for comparisonShard in shards {
+                let comparisonClip = Shard.getClip(clipID: comparisonShard.clipID)!
+                let comparisonMoment = Shard.getMoment(momentID: comparisonClip.momentID)!
+
+                if moment.influencerID == comparisonMoment.influencerID {
+                    // Increase purity for having the same influencer
+                    purity = purity + 10
+                    if moment.id == comparisonMoment.id {
+                        // Increase purity for having the same moment
+                        purity = purity + 10
+                        if shard.clipID == comparisonShard.clipID {
+                            // Increase purity if clips match
+                            purity = purity + 10
+                        } else {
+                            // Increase purity if clip sequences are different
+                            if !uniqueSequences.contains(comparisonClip.sequence) {
+                                purity = purity + 20
+                                uniqueSequences.append(comparisonClip.sequence)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return purity
+    }
+
+    // Merge multiple Shard NFTs to receive a Crystal NFT
+    pub fun merge(shards: @[Shard.NFT]): @Crystal.NFT? {
+        // Iterate resources to get an array of Shard references
+        var i = 0
+        let shardReferences: [&Shard.NFT] = []
+        while i < shards.length {
+            shardReferences.append(&shards[i] as &Shard.NFT)
+            i = i + 1
+        }
+
+        // Get the purity
+        let purity: UInt16 = Crystal.getPurity(shards: shardReferences)
+
+        // Destroy the Shards and return a new Crystal with calculated purity
+        destroy shards
+        return <- create NFT(initID: Crystal.totalSupply, purity: purity)
     }
 
     init() {
