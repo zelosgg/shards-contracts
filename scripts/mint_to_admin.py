@@ -6,11 +6,15 @@ from rich import print
 
 MINT: str = "./cadence/transactions/mint-batch.cdc"
 
-NETWORK: str = "mainnet"
+# Uncomment some of these to make the script work
+
+# MAINNET
+# NETWORK: str = "mainnet"
 # RECEIVER: str = "0x1f56a1e665826a52"
 # RECEIVER: str = "0x8faeb9611819f062"  # derek mainnet
-RECEIVER: str = "0xc97756439b51c842"  # hex mainnet
+# RECEIVER: str = "0xc97756439b51c842"  # hex mainnet
 
+# TESTNET
 # NETWORK: str = "testnet"
 # RECEIVER: str = "0x71db3ec2cdcea1f1"
 
@@ -33,7 +37,7 @@ def main():
         compiled_contract = compile(NETWORK, MINT).encode("utf-8")
         contract.write(compiled_contract)
         contract.read()
-        for clip_id in range(1):
+        for clip_id in range(45):
             args = [
                 {"type": "Address", "value": RECEIVER},
                 {"type": "UInt32", "value": str(clip_id)},

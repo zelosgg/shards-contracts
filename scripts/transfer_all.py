@@ -5,8 +5,14 @@ import tempfile
 from rich import print
 
 MINT: str = "./cadence/transactions/transfer-all.cdc"
-NETWORK: str = "mainnet"
-RECEIVER: str = "0x1f56a1e665826a52"
+
+# Uncomment some of these to make the script work
+
+# MAINNET
+# NETWORK: str = "mainnet"
+# RECEIVER: str = "0x1f56a1e665826a52"
+
+# TESTNET
 # NETWORK: str = "testnet"
 # RECEIVER: str = "0x71db3ec2cdcea1f1"
 
