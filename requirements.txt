@@ -1,0 +1,6 @@
+# console
+rich
+
+# formatting
+black
+isort
