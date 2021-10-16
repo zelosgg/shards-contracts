@@ -10,7 +10,30 @@ pub contract Crystal: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event CrystalMinted(id: UInt64, purity: UInt16)
+    pub event CrystalMinted(
+        id: UInt64,
+        shardIDs: [UInt64],
+        clipIDs: [UInt32],
+        momentIDs: [UInt32],
+        purity: UInt16
+    )
+
+    pub struct ShardData {
+        // The unique ID of the Moment
+        pub let id: UInt64
+
+        // The influencer that the Moment belongs to
+        pub let clip: Shard.Clip
+
+        // The amount of Clips the Moments splits into
+        pub let moment: Shard.Moment
+
+        init(shard: &Shard.NFT) {
+            self.id = shard.id
+            self.clip = Shard.getClip(clipID: shard.clipID)!
+            self.moment = Shard.getMoment(momentID: self.clip.momentID)!
+        }
+    }
 
     // Interface for a Collection
     pub resource interface CrystalCollectionPublic {
@@ -33,14 +56,36 @@ pub contract Crystal: NonFungibleToken {
         // Purity of the Crystal
         pub let purity: UInt16
 
-        init(initID: UInt64, purity: UInt16) {
+        init(
+            initID: UInt64,
+            shards: [&Shard.NFT],
+            purity: UInt16)
+        {
             self.id = initID
             self.purity = purity
 
             // Increase the total supply counter
             Crystal.totalSupply = Crystal.totalSupply + (1 as UInt64)
 
-            emit CrystalMinted(id: self.id, purity: self.purity)
+            // Gets shard data for use in event emit
+            var shardIDs: [UInt64] = []
+            var clipIDs: [UInt32] = []
+            var momentIDs: [UInt32] = []
+
+            for shard in shards {
+                let shardData = Crystal.ShardData(shard)
+                shardIDs.append(shardData.id)
+                clipIDs.append(shardData.clip.id)
+                momentIDs.append(shardData.moment.id)
+            }
+
+            emit CrystalMinted(
+                id: self.id,
+                shardIDs: shardIDs,
+                clipIDs: clipIDs,
+                momentIDs: momentIDs,
+                purity: self.purity
+            )
         }
     }
 
@@ -108,11 +153,13 @@ pub contract Crystal: NonFungibleToken {
         // Mints a new NFT with a new ID
         pub fun mintNFT(
             recipient: &{Crystal.CrystalCollectionPublic},
+            shards: [&Shard.NFT]
             purity: UInt16
         ) {
             // Creates a new NFT with provided arguments
             var newNFT <- create NFT(
                 initID: Crystal.totalSupply,
+                shards: shards,
                 purity: purity
             )
 
@@ -131,6 +178,7 @@ pub contract Crystal: NonFungibleToken {
         return <- create Collection()
     }
 
+    // Provided a list of IDs, returns the Shard NFT references
     pub fun getShardsByIDs(owner: Address, ids: [UInt64]): [&Shard.NFT] {
         pre {
             ids.length > 0: "No Shard IDs supplied"
@@ -152,14 +200,15 @@ pub contract Crystal: NonFungibleToken {
         return shards
     }
 
+    // Provided a Shard, returns the splits property of the Shard
     pub fun getShardSplits(shard: &Shard.NFT): UInt8 {
-        let clip = Shard.getClip(clipID: shard.clipID)!
-        let moment = Shard.getMoment(momentID: clip.momentID)!
-        var splits = moment.splits
+        let shardData = Crystal.ShardData(shard)
+        var splits = shardData.moment.splits
 
         return splits
     }
 
+    // Provided a list of Shard references, returns true if they can merge, false if not
     pub fun checkCanMerge(shards: [&Shard.NFT]): Bool {
         pre {
             shards.length > 0: "No Shards supplied"
@@ -187,6 +236,7 @@ pub contract Crystal: NonFungibleToken {
         return true
     }
 
+    // Provided a Shard reference, returns the calculated purity of the Shard
     pub fun getPurity(shards: [&Shard.NFT]): UInt16 {
         pre {
             // Make sure the sequence of each Shard matches
@@ -201,29 +251,26 @@ pub contract Crystal: NonFungibleToken {
 
         while shards.length > 0 {
             // Remove the Shard and save it for comparison
-            let shard = shards.removeFirst()
-            let clip = Shard.getClip(clipID: shard.clipID)!
-            let moment = Shard.getMoment(momentID: clip.momentID)!
+            let shard = Crystal.ShardData(shards.removeFirst())
 
             // Iterate over the array once again for comparison
             for comparisonShard in shards {
-                let comparisonClip = Shard.getClip(clipID: comparisonShard.clipID)!
-                let comparisonMoment = Shard.getMoment(momentID: comparisonClip.momentID)!
+                let comparison = Crystal.ShardData(comparisonShard)
 
-                if moment.influencerID == comparisonMoment.influencerID {
+                if shard.moment.influencerID == comparison.moment.influencerID {
                     // Increase purity for having the same influencer
                     purity = purity + 10
-                    if moment.id == comparisonMoment.id {
+                    if shard.moment.id == comparison.moment.id {
                         // Increase purity for having the same moment
                         purity = purity + 10
-                        if shard.clipID == comparisonShard.clipID {
+                        if shard.clip.id == comparison.clip.id {
                             // Increase purity if clips match
                             purity = purity + 10
                         } else {
                             // Increase purity if clip sequences are different
-                            if !uniqueSequences.contains(comparisonClip.sequence) {
+                            if !uniqueSequences.contains(comparison.clip.sequence) {
                                 purity = purity + 20
-                                uniqueSequences.append(comparisonClip.sequence)
+                                uniqueSequences.append(comparison.clip.sequence)
                             }
                         }
                     }
@@ -238,18 +285,24 @@ pub contract Crystal: NonFungibleToken {
     pub fun merge(shards: @[Shard.NFT]): @Crystal.NFT? {
         // Iterate resources to get an array of Shard references
         var i = 0
-        let shardReferences: [&Shard.NFT] = []
+        var shardReferences: [&Shard.NFT] = []
         while i < shards.length {
-            shardReferences.append(&shards[i] as &Shard.NFT)
+            let shard: &Shard.NFT = &shards[i] as &Shard.NFT
+            shardReferences.append(shard)
             i = i + 1
         }
 
         // Get the purity
         let purity: UInt16 = Crystal.getPurity(shards: shardReferences)
 
-        // Destroy the Shards and return a new Crystal with calculated purity
+        // Create a new Crystal with calculated purity and destroy the Shards
+        let crystal: @Crystal.NFT <- create NFT(
+            initID: Crystal.totalSupply,
+            shards: shardReferences,
+            purity: purity
+        )
         destroy shards
-        return <- create NFT(initID: Crystal.totalSupply, purity: purity)
+        return <- crystal
     }
 
     init() {
