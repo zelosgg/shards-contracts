@@ -28,7 +28,7 @@ const createMoment = async (operator, influencerID, splits, metadataURI) => {
     influencerID = "Fake String";
   }
   if (splits === undefined) {
-    splits = 5
+    splits = 5;
   }
   if (metadataURI === undefined) {
     metadataURI = "https://eternal.gg/metadata.json";
