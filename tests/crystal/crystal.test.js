@@ -157,9 +157,8 @@ describe("crystal", () => {
           shards.map((k) => parseInt(k.id)),
         ],
       });
-      for (const event in result.events) {
-        console.log(result.events[event].data);
-      }
+
+      expect(result.events.length).toEqual(5)
     });
   });
 });
