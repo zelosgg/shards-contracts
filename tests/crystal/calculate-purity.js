@@ -1,25 +1,35 @@
 function calculatePurity(shards) {
-  var purity = 0;
-  var uniqueSequences = [shards[0].sequence];
+  var purity = 10 * shards.length * shards.length + 10;
+  var uniqueInfluencers = []
+  var uniqueMoments = []
+  var uniqueClips = []
+  var uniqueSequences = []
 
-  while (shards.length > 0) {
-    const shard = shards.shift();
-    shards.forEach((comparisonShard) => {
-      if (shard.creatorId === comparisonShard.creatorId) {
-        purity += 10;
-        if (shard.momentId === comparisonShard.momentId) {
-          purity += 10;
-          if (shard.clipId === comparisonShard.clipId) {
-            purity += 10;
-          } else {
-            if (!uniqueSequences.includes(comparisonShard.sequence)) {
-              purity += 20;
-              uniqueSequences.push(comparisonShard.sequence);
-            }
-          }
-        }
-      }
-    });
+  for (const shard of shards) {
+    if (!uniqueInfluencers.includes(shard.creatorId)) {
+      uniqueInfluencers.push(shard.creatorId)
+      uniqueMoments.push(shard.momentId)
+      uniqueClips.push(shard.clipId)
+    } else if (!uniqueMoments.includes(shard.momentId)) {
+      uniqueMoments.push(shard.momentId)
+      uniqueClips.push(shard.clipId)
+    } else if (!uniqueClips.includes(shard.clipId)) {
+      uniqueClips.push(shard.clipId)
+      uniqueSequences.push(shard.sequence)
+    }
+  }
+
+  purity -= uniqueInfluencers.length * 10
+  purity -= uniqueMoments.length * 10
+  purity -= uniqueClips.length * 10
+  purity += uniqueSequences.length * 20
+
+  if (uniqueSequences.length >= 1) {
+    purity += 10
+  }
+
+  if (shards.length - uniqueClips.length >= shards.length - 1) {
+    purity += 10
   }
 
   return purity;

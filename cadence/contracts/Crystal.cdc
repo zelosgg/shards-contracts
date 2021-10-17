@@ -15,7 +15,7 @@ pub contract Crystal: NonFungibleToken {
         shardIDs: [UInt64],
         clipIDs: [UInt32],
         momentIDs: [UInt32],
-        purity: UInt16
+        purity: Int
     )
 
     pub struct ShardData {
@@ -54,13 +54,13 @@ pub contract Crystal: NonFungibleToken {
         pub let id: UInt64
 
         // Purity of the Crystal
-        pub let purity: UInt16
+        pub let purity: Int
 
         init(
             initID: UInt64,
             shards: [&Shard.NFT],
-            purity: UInt16)
-        {
+            purity: Int
+        ) {
             self.id = initID
             self.purity = purity
 
@@ -148,31 +148,6 @@ pub contract Crystal: NonFungibleToken {
         }
     }
 
-    // A special authorization resource with administrative functions
-    pub resource Admin {
-        // Mints a new NFT with a new ID
-        pub fun mintNFT(
-            recipient: &{Crystal.CrystalCollectionPublic},
-            shards: [&Shard.NFT]
-            purity: UInt16
-        ) {
-            // Creates a new NFT with provided arguments
-            var newNFT <- create NFT(
-                initID: Crystal.totalSupply,
-                shards: shards,
-                purity: purity
-            )
-
-            // Deposits it in the recipient's account using their reference
-            recipient.deposit(token: <-newNFT)
-        }
-
-        // Creates a new Admin resource to be given to an account
-        pub fun createNewAdmin(): @Admin {
-            return <-create Admin()
-        }
-    }
-
     // Public function that anyone can call to create a new empty collection
     pub fun createEmptyCollection(): @Crystal.Collection {
         return <- create Collection()
@@ -237,45 +212,44 @@ pub contract Crystal: NonFungibleToken {
     }
 
     // Provided a Shard reference, returns the calculated purity of the Shard
-    pub fun getPurity(shards: [&Shard.NFT]): UInt16 {
+    pub fun getPurity(shards: [&Shard.NFT]): Int {
         pre {
             // Make sure the sequence of each Shard matches
             Crystal.checkCanMerge(shards: shards): "Shards must all have the same sequence length"
         }
 
-        var purity: UInt16 = 0
+        var purity: Int = 10 * shards.length * shards.length + 10
+        var uniqueInfluencers: [String] = []
+        var uniqueMoments: [UInt32] = []
+        var uniqueClips: [UInt32] = []
         var uniqueSequences: [UInt8] = []
 
-        // Add the unique sequence for the first Shard
-        uniqueSequences.append(Shard.getClip(clipID: shards[0].clipID)!.sequence)
-
-        while shards.length > 0 {
-            // Remove the Shard and save it for comparison
-            let shard = Crystal.ShardData(shards.removeFirst())
-
-            // Iterate over the array once again for comparison
-            for comparisonShard in shards {
-                let comparison = Crystal.ShardData(comparisonShard)
-
-                if shard.moment.influencerID == comparison.moment.influencerID {
-                    // Increase purity for having the same influencer
-                    purity = purity + 10
-                    if shard.moment.id == comparison.moment.id {
-                        // Increase purity for having the same moment
-                        purity = purity + 10
-                        if shard.clip.id == comparison.clip.id {
-                            // Increase purity if clips match
-                            purity = purity + 10
-                        } else {
-                            // Increase purity if clip sequences are different
-                            if !uniqueSequences.contains(comparison.clip.sequence) {
-                                purity = purity + 20
-                                uniqueSequences.append(comparison.clip.sequence)
-                            }
-                        }
-                    }
-                }
+        for shard in shards {
+            let shardData = Crystal.ShardData(shard)
+            if !uniqueInfluencers.contains(shardData.moment.influencerID) {
+                uniqueInfluencers.append(shardData.moment.influencerID)
+                uniqueMoments.append(shardData.moment.id)
+                uniqueClips.append(shardData.clip.id)
+            } else if !uniqueMoments.contains(shardData.moment.id) {
+                uniqueMoments.append(shardData.moment.id)
+                uniqueClips.append(shardData.clip.id)
+            } else if !uniqueClips.contains(shardData.clip.id) {
+                uniqueClips.append(shardData.clip.id)
+                uniqueSequences.append(shardData.clip.sequence)
             }
+        }
+
+        purity = purity - uniqueInfluencers.length * 10
+        purity = purity - uniqueMoments.length * 10
+        purity = purity - uniqueClips.length * 10
+        purity = purity + uniqueSequences.length * 20
+
+        if uniqueSequences.length >= 1 {
+            purity = purity + 10
+        }
+
+        if shards.length - uniqueClips.length >= shards.length - 1 {
+            purity = purity + 10
         }
 
         return purity
@@ -293,7 +267,7 @@ pub contract Crystal: NonFungibleToken {
         }
 
         // Get the purity
-        let purity: UInt16 = Crystal.getPurity(shards: shardReferences)
+        let purity: Int = Crystal.getPurity(shards: shardReferences)
 
         // Create a new Crystal with calculated purity and destroy the Shards
         let crystal: @Crystal.NFT <- create NFT(
@@ -311,9 +285,6 @@ pub contract Crystal: NonFungibleToken {
 
         // Create a Collection resource and save it to storage
         self.account.save(<-create Collection(), to: /storage/EternalCrystalCollection)
-
-        // Create an Admin resource and save it to storage
-        self.account.save(<- create Admin(), to: /storage/EternalCrystalAdmin)
 
         // Create a public capability for the collection
         self.account.link<&{Crystal.CrystalCollectionPublic}>(
