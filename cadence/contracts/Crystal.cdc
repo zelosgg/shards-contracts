@@ -307,7 +307,7 @@ pub contract Crystal: NonFungibleToken {
 
     init() {
         // Initialize the total supply
-        self.totalSupply = 0
+        self.totalSupply = 1
 
         // Create a Collection resource and save it to storage
         self.account.save(<-create Collection(), to: /storage/EternalCrystalCollection)
