@@ -16,9 +16,12 @@ MINT: str = "./cadence/transactions/mint-batch.cdc"
 
 # TESTNET
 NETWORK: str = "testnet"
-RECEIVER: str = "0x71db3ec2cdcea1f1" # hex testnet
-# RECEIVER: str = "0x9316ffd26ffa1504" # hex goat
+# RECEIVER: str = "0x71db3ec2cdcea1f1" # hex testnet
+RECEIVER: str = "0x9316ffd26ffa1504"  # hex goat
 # RECEIVER: str = "0x56b018f9f37217d6"  # crystal contract
+# RECEIVER: str = "0x65bba9217ae90790"  # test@test.gg testnet
+# RECEIVER: str = "0x227326e388df89a7"  # testing@test.gg testnet
+# RECEIVER: str = "0x70b4d5036bd0e12e"  # derek testnet
 
 
 def compile(network: str, script: str) -> str:
@@ -39,11 +42,11 @@ def main():
         compiled_contract = compile(NETWORK, MINT).encode("utf-8")
         contract.write(compiled_contract)
         contract.read()
-        for clip_id in range(10, 11):
+        for clip_id in range(9):
             args = [
                 {"type": "Address", "value": RECEIVER},
                 {"type": "UInt32", "value": str(clip_id)},
-                {"type": "UInt64", "value": "1"},
+                {"type": "UInt64", "value": "6"},
             ]
             command = f"flow transactions send \
                 {contract.name} \

@@ -57,10 +57,6 @@ def generate_shards() -> list[Shard]:
 
 def calculate_purity(shards: list[Shard]):
     purity = 10 * len(shards) * len(shards) + 10
-    # matched_creators = None
-    # matched_moments = None
-    # matched_clips = None
-    # matched_sequences = None
     unique_creators = []
     unique_moments = []
     unique_clips = []
@@ -89,57 +85,6 @@ def calculate_purity(shards: list[Shard]):
     if len(shards) - len(unique_clips) >= len(shards) - 1:
         purity += 10
 
-    # if shards[0].clip.moment.creator.id == shards[1].clip.moment.creator.id:
-    #     purity += 10
-    #     matched_creators = (matched_creators or 1) + 1
-    #     if shards[0].clip.moment.id == shards[1].clip.moment.id:
-    #         purity += 10
-    #         matched_moments = (matched_moments or 1) + 1
-    #         if shards[0].clip.id == shards[1].clip.id:
-    #             purity += 10
-    #             matched_clips = (matched_clips or 1) + 1
-    #         else:
-    #             purity += 20
-    #             matched_sequences = (matched_sequences or 1) + 1
-
-    # if shards[0].clip.moment.creator.id == shards[2].clip.moment.creator.id:
-    #     purity += 10
-    #     matched_creators = (matched_creators or 1) + 1
-    #     if shards[0].clip.moment.id == shards[2].clip.moment.id:
-    #         purity += 10
-    #         matched_moments = (matched_moments or 1) + 1
-    #         if shards[0].clip.id == shards[2].clip.id:
-    #             purity += 10
-    #             matched_clips = (matched_clips or 1) + 1
-    #         else:
-    #             purity += 20
-    #             matched_sequences = (matched_sequences or 1) + 1
-
-    # if (matched_sequences or 0) >= 2:
-    #     purity += 10
-
-    # if (matched_clips or 0) >= 3:
-    #     purity += 10
-
-    # while len(shards) > 0:
-    #     shard = shards.pop(0)
-    #     for comparison_shard in shards:
-    #         # Add purity for same creator
-    #         if shard.clip.moment.creator.id == comparison_shard.clip.moment.creator.id:
-    #             purity += 5
-    #             matched_creators = (matched_creators or 1) + 1
-    #             # Add purity for same moment
-    #             if shard.clip.moment.id == comparison_shard.clip.moment.id:
-    #                 purity += 5
-    #                 matched_moments = (matched_moments or 1) + 1
-    #                 # Add purity for same clip ID
-    #                 if shard.clip.id == comparison_shard.clip.id:
-    #                     purity += 5
-    #                     matched_clips = (matched_clips or 1) + 1
-    #                 if comparison_shard.clip.sequence not in unique_sequences:
-    #                     purity += 10
-    #                     unique_sequences.append(comparison_shard.clip.sequence)
-
     return (
         purity,
         (len(shards) - len(unique_creators) or None),
@@ -147,13 +92,6 @@ def calculate_purity(shards: list[Shard]):
         (len(shards) - len(unique_clips) or None),
         (len(unique_sequences) or None),
     )
-    # return (
-    #     purity,
-    #     matched_creators,
-    #     matched_moments,
-    #     matched_clips,
-    #     matched_sequences,
-    # )
 
 
 shards = generate_shards()
@@ -185,23 +123,26 @@ for combination in combinations(shards, 3):
 
 for combination in sorted(all_combinations, key=lambda d: d["purity"]):
     print("Purity:", combination["purity"])
-    print("Matched Creators:", combination["matched_creators"])
-    print("Matched Moments:", combination["matched_moments"])
-    print("Matched Clips:", combination["matched_clips"])
-    print("Unique Sequences:", combination["different_sequences"])
+    print(
+        "Matched Creators:",
+        combination["matched_creators"] + 1
+        if combination["matched_creators"]
+        else None,
+    )
+    print(
+        "Matched Moments:",
+        combination["matched_moments"] + 1 if combination["matched_moments"] else None,
+    )
+    print(
+        "Matched Clips:",
+        combination["matched_clips"] + 1 if combination["matched_clips"] else None,
+    )
+    print(
+        "Unique Sequences:",
+        combination["different_sequences"] + 1
+        if combination["different_sequences"]
+        else None,
+    )
     print()
 
 print("All possible purities", sorted(all_purities))
-
-# for shard in shards:
-#     print(
-#         "shard id:",
-#         shard.id,
-#         "clip id:",
-#         shard.clip.id,
-#         shard.clip.sequence,
-#         "moment id:",
-#         shard.clip.moment.id,
-#         "creator id:",
-#         shard.clip.moment.creator.id,
-#     )
