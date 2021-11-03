@@ -11,12 +11,12 @@ AIRDROP: str = "./cadence/transactions/airdrop.cdc"
 # Uncomment these to make the script work
 
 # MAINNET
-NETWORK: str = "mainnet"
-RECEIVER: str = "8f6ab066b8b4e5c3"
+# NETWORK: str = "mainnet"
+# RECEIVER: str = "8f6ab066b8b4e5c3"
 
 # TESTNET
-# NETWORK: str = "testnet"
-# RECEIVER: str = "71db3ec2cdcea1f1"
+NETWORK: str = "testnet"
+RECEIVER: str = "71db3ec2cdcea1f1"
 
 
 def chunker(seq, size):
@@ -86,14 +86,15 @@ def main():
             shard_mapping = []
             # for user in users:
             #     for _ in range(user['shards']['amount']):
-                    # address_mapping.append(
-                    #     {"type": "Address", "value": "0x" + user["address"]}
-                    # )
-            address_mapping.append({'type': 'Address', 'value': '0x' + RECEIVER})
+            # address_mapping.append(
+            #     {"type": "Address", "value": "0x" + user["address"]}
+            # )
+            address_mapping.append({"type": "Address", "value": "0x" + RECEIVER})
             shard_mapping.append({"type": "UInt32", "value": str(randrange(45))})
 
             for i in range(0, len(address_mapping), 300):
-                if i > 1: break
+                if i > 1:
+                    break
                 args = [{"type": "Array", "value": []}, {"type": "Array", "value": []}]
                 address_chunk = address_mapping[i : i + 300]
                 shard_chunk = shard_mapping[i : i + 300]

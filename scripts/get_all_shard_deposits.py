@@ -2,6 +2,7 @@ import os
 import re
 
 import psycopg2
+from dotenv import dotenv_values
 from rich import print
 from rich.console import Console
 
@@ -18,7 +19,7 @@ LOWEST_BLOCK = 19200000
 # TESTNET
 # NETWORK: str = "testnet"
 
-CONN: str = ""
+CONN: str = dotenv_values(".env")["POSTGRES_CONNECTION"]
 
 
 def fetch_addresses():
