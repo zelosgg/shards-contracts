@@ -6,16 +6,17 @@ import csv
 from rich import print
 from random import randrange
 
+AIRDROP: str = "./cadence/transactions/airdrop.cdc"
+
 # Uncomment these to make the script work
 
 # MAINNET
-# AIRDROP: str = "./cadence/transactions/airdrop.cdc"
 # NETWORK: str = "mainnet"
-# RECEIVER: str = "1f56a1e665826a52"
+# RECEIVER: str = "8f6ab066b8b4e5c3"
 
 # TESTNET
-# NETWORK: str = "testnet"
-# RECEIVER: str = "71db3ec2cdcea1f1"
+NETWORK: str = "testnet"
+RECEIVER: str = "71db3ec2cdcea1f1"
 
 
 def chunker(seq, size):
@@ -83,15 +84,17 @@ def main():
 
             address_mapping = []
             shard_mapping = []
-            for user in users:
-                for _ in range(user['shards']['amount']):
-                    address_mapping.append(
-                        {"type": "Address", "value": "0x" + user["address"]}
-                    )
-                    # address_mapping.append({'type': 'Address', 'value': '0x' + RECEIVER})
-                    shard_mapping.append({"type": "UInt32", "value": str(randrange(45))})
+            # for user in users:
+            #     for _ in range(user['shards']['amount']):
+            # address_mapping.append(
+            #     {"type": "Address", "value": "0x" + user["address"]}
+            # )
+            address_mapping.append({"type": "Address", "value": "0x" + RECEIVER})
+            shard_mapping.append({"type": "UInt32", "value": str(randrange(45))})
 
             for i in range(0, len(address_mapping), 300):
+                if i > 1:
+                    break
                 args = [{"type": "Array", "value": []}, {"type": "Array", "value": []}]
                 address_chunk = address_mapping[i : i + 300]
                 shard_chunk = shard_mapping[i : i + 300]
