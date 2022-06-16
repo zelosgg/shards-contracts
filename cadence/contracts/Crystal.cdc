@@ -1,5 +1,6 @@
-import NonFungibleToken from "./NonFungibleToken.cdc"
-import Shard from "./Shard.cdc"
+// import NonFungibleToken from 0x631e88ae7f1d7c20 // testnet
+import NonFungibleToken from 0x1d7e57aa55817448 // mainnet
+import Shard from 0x82b54037a8f180cf // mainnet
 
 // eternal.gg
 pub contract Crystal: NonFungibleToken {
@@ -126,13 +127,13 @@ pub contract Crystal: NonFungibleToken {
 
         // Gets a reference to a basic NFT in the collection
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-            return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+            return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
         }
 
         // Gets a reference to the Crystal NFT for metadata and such
         pub fun borrowCrystalNFT(id: UInt64): &Crystal.NFT? {
             if self.ownedNFTs[id] != nil {
-                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
                 return ref as! &Crystal.NFT
             } else {
                 return nil
